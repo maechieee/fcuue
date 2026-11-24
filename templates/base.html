@@ -1,0 +1,420 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FCUUE{% endblock %} | FCUUE</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        container: { center: true, padding: '1rem' },
+        extend: {
+          colors: {
+            navy: {
+              50:  '#e8edf5',
+              100: '#d0d9ea',
+              200: '#b8c6de',
+              500: '#234080',
+              600: '#1a3566',
+              700: '#13284e',
+              800: '#0d1e3a',
+              900: '#0a1628',
+            },
+            gold: {
+              300: '#f0d282',
+              400: '#d4a84f',
+              500: '#b28d47',
+              600: '#9a7a3d',
+            },
+            danger: {
+              50:  '#fef2f2',
+              100: '#fee2e2',
+              200: '#fecaca',
+              DEFAULT: '#dc2626',
+              700: '#b91c1c',
+            },
+            warn: {
+              50:  '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              DEFAULT: '#d97706',
+              700: '#b45309',
+            },
+            ok: {
+              50:  '#ecfdf5',
+              100: '#d1fae5',
+              DEFAULT: '#059669',
+              700: '#047857',
+            },
+            info: {
+              50:  '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              DEFAULT: '#2563eb',
+              700: '#1d4ed8',
+            },
+            violet: {
+              100: '#f3e8ff',
+              200: '#e9d5ff',
+              DEFAULT: '#7c3aed',
+              700: '#6d28d9',
+            },
+            muted: {
+              50:  '#f9fafb',
+              100: '#f3f4f6',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              DEFAULT: '#6b7280',
+            },
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=15">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="font-inter antialiased">
+
+
+<!-- Navbar -->
+<nav class="sticky top-0 z-50 bg-white" id="mainNav"
+     style="box-shadow:0 2px 20px rgba(19,40,78,.08);border-bottom:1px solid rgba(19,40,78,.08);">
+  <div class="container">
+    <div class="flex items-center h-16 gap-4">
+
+      <!-- Brand -->
+      <a class="flex items-center gap-2 flex-shrink-0 no-underline" href="{% url 'home' %}" style="color:var(--primary);">
+        <img src="{% static 'images/logo.png' %}" alt="FCUUE" class="brand-logo-img">
+        <span class="font-black text-lg" style="letter-spacing:-.3px;">FCUUE</span>
+      </a>
+
+      <!-- Desktop Nav Items -->
+      <div class="hidden lg:flex items-center gap-1 ml-auto">
+        <a class="flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'product_list' %}">
+          <span data-icon="grid-3x3-gap" class="ui-icon mr-1"></span>Shop
+        </a>
+
+        {% if user.is_authenticated %}
+          <!-- Cart -->
+          <a class="nav-cart-btn relative flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-colors hover:bg-navy-50"
+             style="color:var(--primary);" href="{% url 'cart' %}">
+            <span data-icon="bag" class="ui-icon"></span>
+            Cart
+            {% if cart_item_count > 0 %}
+              <span class="badge-cart">{{ cart_item_count }}</span>
+            {% endif %}
+          </a>
+          <a class="relative flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-colors hover:bg-navy-50"
+             style="color:var(--primary);" href="{% url 'notifications' %}">
+            <span data-icon="bell" class="ui-icon"></span>
+            Notifications
+            {% if notification_count > 0 %}
+              <span class="badge-cart">{{ notification_count }}</span>
+            {% endif %}
+          </a>
+
+          <!-- User Dropdown -->
+          <div class="relative" id="userDropWrap">
+            <button class="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-navy-50 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-navy-200"
+                    style="color:var(--primary);border:none;background:transparent;cursor:pointer;" id="userDropBtn" type="button">
+              {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" class="nav-avatar" alt="avatar">
+              {% else %}
+                <div class="nav-avatar-placeholder"><span data-icon="person-fill" class="ui-icon"></span></div>
+              {% endif %}
+              <span>{{ user.first_name|default:user.username }}</span>
+              <span data-icon="chevron-down" class="ui-icon text-xs" id="dropChev" style="transition:transform .2s;"></span>
+            </button>
+
+            <div class="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl py-1 hidden"
+                 id="userDropMenu"
+                 style="box-shadow:0 8px 32px rgba(19,40,78,.14);border:1px solid rgba(19,40,78,.09);">
+              <div class="px-3 py-2 mb-1" style="border-bottom:1px solid rgba(19,40,78,.08);">
+                <div class="font-bold text-xs" style="color:var(--primary);">{{ user.get_full_name|default:user.username }}</div>
+                <div class="text-xs text-muted-400 mt-0.5">{{ user.email }}</div>
+              </div>
+              <a class="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-50"
+                 style="color:var(--primary);" href="{% url 'profile' %}">
+                <span data-icon="person-circle" class="ui-icon" style="color:var(--primary);"></span>My Profile
+              </a>
+              <a class="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-50"
+                 style="color:var(--primary);" href="{% url 'order_list' %}">
+                <span data-icon="bag-check" class="ui-icon" style="color:var(--primary);"></span>My Orders
+              </a>
+              <a class="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-navy-50"
+                 style="color:var(--primary);" href="{% url 'notifications' %}">
+                <span data-icon="bell" class="ui-icon" style="color:var(--primary);"></span>Notifications
+                {% if notification_count > 0 %}<span class="ml-auto text-xs font-bold text-gold-500">{{ notification_count }}</span>{% endif %}
+              </a>
+              {% if user.is_staff %}
+                <div class="my-1" style="border-top:1px solid rgba(19,40,78,.08);"></div>
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors hover:bg-warn-50"
+                   style="color:var(--accent);" href="{% url 'manage_dashboard' %}">
+                  <span data-icon="speedometer2" class="ui-icon"></span>Store Console
+                </a>
+              {% endif %}
+              <div class="my-1" style="border-top:1px solid rgba(19,40,78,.08);"></div>
+              <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger-50 focus:outline-none focus:ring-2 focus:ring-danger-100 rounded-lg"
+                        style="border:none;background:transparent;cursor:pointer;">
+                  <span data-icon="box-arrow-right" class="ui-icon"></span>Logout
+                </button>
+              </form>
+            </div>
+          </div>
+
+        {% else %}
+          <a class="px-3 py-2 text-sm font-semibold rounded-lg transition-colors hover:bg-navy-50"
+             style="color:var(--primary);" href="{% url 'login' %}">Login</a>
+          <a class="btn btn-gradient btn-sm px-4 ml-1" href="{% url 'register' %}">
+            Get Started <span data-icon="arrow-right" class="ui-icon ml-1"></span>
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Mobile Hamburger -->
+      <button class="lg:hidden ml-auto p-2 rounded-lg transition-colors hover:bg-navy-50 focus:outline-none focus:ring-2 focus:ring-navy-200"
+              style="color:var(--primary);" id="mobileNavBtn" type="button" aria-label="Toggle menu">
+        <span data-icon="list" class="ui-icon text-2xl" id="mobileNavIcon"></span>
+      </button>
+
+    </div><!-- /flex row -->
+
+    <!-- Mobile Menu (hidden by default) -->
+    <div class="hidden lg:hidden pb-3 pt-1" id="mobileNav">
+      <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-navy-50"
+         style="color:var(--primary);" href="{% url 'product_list' %}">
+        <span data-icon="grid-3x3-gap" class="ui-icon"></span>Shop
+      </a>
+
+      {% if user.is_authenticated %}
+        <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'cart' %}">
+          <span data-icon="bag" class="ui-icon"></span>Cart{% if cart_item_count > 0 %} <span class="ml-1 text-xs font-bold text-gold-500">({{ cart_item_count }})</span>{% endif %}
+        </a>
+        <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'profile' %}">
+          <span data-icon="person-circle" class="ui-icon"></span>My Profile
+        </a>
+        <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'order_list' %}">
+          <span data-icon="bag-check" class="ui-icon"></span>My Orders
+        </a>
+        <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'notifications' %}">
+          <span data-icon="bell" class="ui-icon"></span>Notifications{% if notification_count > 0 %} <span class="ml-1 text-xs font-bold text-gold-500">({{ notification_count }})</span>{% endif %}
+        </a>
+        {% if user.is_staff %}
+          <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-lg transition-colors hover:bg-warn-50"
+             style="color:var(--accent);" href="{% url 'manage_dashboard' %}">
+            <span data-icon="speedometer2" class="ui-icon"></span>Store Console
+          </a>
+        {% endif %}
+        <form method="POST" action="{% url 'logout' %}" class="mt-1">
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-danger rounded-lg transition-colors hover:bg-danger-50 focus:outline-none focus:ring-2 focus:ring-danger-100"
+                  style="border:none;background:transparent;cursor:pointer;">
+            <span data-icon="box-arrow-right" class="ui-icon"></span>Logout
+          </button>
+        </form>
+      {% else %}
+        <a class="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold rounded-lg transition-colors hover:bg-navy-50"
+           style="color:var(--primary);" href="{% url 'login' %}">
+          <span data-icon="box-arrow-in-right" class="ui-icon"></span>Login
+        </a>
+        <a class="flex items-center justify-center gap-2 px-3 py-2.5 mt-2 btn btn-gradient text-sm font-bold rounded-xl"
+           href="{% url 'register' %}">
+          Get Started <span data-icon="arrow-right" class="ui-icon"></span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- Toast Messages -->
+{% if messages %}
+<div class="fixed top-20 right-4 z-[9999] flex flex-col gap-2" id="toastContainer">
+  {% for message in messages %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-sm font-medium max-w-sm shadow-lg
+    {% if message.tags == 'error' %}bg-danger
+    {% elif message.tags == 'warning' %}bg-warn
+    {% elif message.tags == 'success' %}bg-ok
+    {% else %}bg-navy-700{% endif %}"
+    data-toast style="transition:opacity .4s ease,transform .4s ease;transform:translateX(100%);opacity:0;">
+    {% if message.tags == 'error' %}<span data-icon="x-circle" class="ui-icon flex-shrink-0"></span>
+    {% elif message.tags == 'warning' %}<span data-icon="exclamation-triangle" class="ui-icon flex-shrink-0"></span>
+    {% elif message.tags == 'success' %}<span data-icon="check-circle" class="ui-icon flex-shrink-0"></span>
+    {% else %}<span data-icon="info-circle" class="ui-icon flex-shrink-0"></span>{% endif %}
+    <span class="flex-1">{{ message }}</span>
+    <button type="button"
+            onclick="this.closest('[data-toast]').remove()"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-transparent border-0 p-0 text-white/80 hover:bg-white/15 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/40 transition-colors"
+            aria-label="Dismiss notification">
+      <span data-icon="x" class="ui-icon"></span>
+    </button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Main Content -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- Footer -->
+<footer style="background:var(--dark);" class="text-white pt-12 pb-6">
+  <div class="container">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <img src="{% static 'images/logo.png' %}" alt="FCUUE"
+               class="brand-logo-img" style="height:32px;border-radius:5px;opacity:.9;">
+          <span class="font-black text-base" style="letter-spacing:-.3px;">FCUUE</span>
+        </div>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,255,255,.45);max-width:260px;">
+          Your school's official uniform store. Quality garments, easy pickup, approved by admin.
+        </p>
+        <div class="inline-flex items-center gap-2 mt-4 px-3 py-1.5 rounded-lg text-xs"
+             style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);">
+          <span data-icon="patch-check-fill" class="ui-icon" style="color:var(--primary-mid);"></span>School Approved Store
+        </div>
+      </div>
+
+      <div>
+        <h6 class="font-bold text-xs uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.4);">Shop</h6>
+        <div class="flex flex-col gap-2">
+          <a href="{% url 'product_list' %}" class="footer-link">All Products</a>
+          <a href="{% url 'product_list' %}?category=kindergarten" class="footer-link">Kindergarten</a>
+          <a href="{% url 'product_list' %}?category=elementary" class="footer-link">Elementary</a>
+          <a href="{% url 'product_list' %}?category=junior-high-school" class="footer-link">Junior High School</a>
+          <a href="{% url 'product_list' %}?category=senior-high-school" class="footer-link">Senior High School</a>
+          <a href="{% url 'product_list' %}?category=college" class="footer-link">College</a>
+        </div>
+      </div>
+
+      <div>
+        <h6 class="font-bold text-xs uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.4);">Account</h6>
+        <div class="flex flex-col gap-2">
+          {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="footer-link">My Profile</a>
+            <a href="{% url 'order_list' %}" class="footer-link">My Orders</a>
+            <a href="{% url 'notifications' %}" class="footer-link">Notifications</a>
+            <a href="{% url 'cart' %}" class="footer-link">My Cart</a>
+          {% else %}
+            <a href="{% url 'login' %}" class="footer-link">Login</a>
+            <a href="{% url 'register' %}" class="footer-link">Create Account</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <h6 class="font-bold text-xs uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.4);">Contact & Pickup</h6>
+        <div class="flex flex-col gap-3 text-sm" style="color:rgba(255,255,255,.45);">
+          <div class="flex items-start gap-2">
+            <span data-icon="geo-alt-fill" class="ui-icon mt-0.5 flex-shrink-0" style="color:var(--primary-mid);"></span>
+            University Enterprise, Campus Ground Floor
+          </div>
+          <div class="flex items-start gap-2">
+            <span data-icon="clock-fill" class="ui-icon mt-0.5 flex-shrink-0" style="color:var(--primary-mid);"></span>
+            Mon-Fri, 8:00 AM - 4:00 PM
+          </div>
+          <div class="flex items-start gap-2">
+            <span data-icon="envelope-fill" class="ui-icon mt-0.5 flex-shrink-0" style="color:var(--primary-mid);"></span>
+            fcuue@school.edu.ph
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-6 flex flex-col sm:flex-row justify-between items-center gap-2"
+         style="border-top:1px solid rgba(255,255,255,.08);">
+      <p class="text-xs" style="color:rgba(255,255,255,.25);">&copy; 2026 FCUUE — School Uniform Store. All rights reserved.</p>
+      <p class="text-xs" style="color:rgba(255,255,255,.25);">Made for students, by students.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/icons.js' %}?v=2"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+
+<script>
+/* ── Mobile navbar toggle ─────────────────────────────────────── */
+(function () {
+  const btn  = document.getElementById('mobileNavBtn');
+  const menu = document.getElementById('mobileNav');
+  const icon = document.getElementById('mobileNavIcon');
+
+  btn?.addEventListener('click', () => {
+    const closed = menu.classList.toggle('hidden');
+    icon.dataset.icon = closed ? 'list' : 'x';
+    window.renderLocalIcon?.(icon);
+  });
+})();
+
+/* ── User dropdown ────────────────────────────────────────────── */
+(function () {
+  const dropBtn  = document.getElementById('userDropBtn');
+  const dropMenu = document.getElementById('userDropMenu');
+  const dropChev = document.getElementById('dropChev');
+
+  dropBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    const isHidden = dropMenu.classList.toggle('hidden');
+    dropChev.style.transform = isHidden ? '' : 'rotate(180deg)';
+  });
+
+  document.addEventListener('click', () => {
+    dropMenu?.classList.add('hidden');
+    if (dropChev) dropChev.style.transform = '';
+  });
+})();
+
+/* ── Toast: slide in from right, auto-dismiss after 4s ───────── */
+(function () {
+  document.querySelectorAll('[data-toast]').forEach((t, i) => {
+    const delay = i * 120;
+    setTimeout(() => {
+      t.style.transform = 'translateX(0)';
+      t.style.opacity   = '1';
+    }, delay);
+    setTimeout(() => {
+      t.style.transform = 'translateX(60px)';
+      t.style.opacity   = '0';
+      setTimeout(() => t.remove(), 420);
+    }, 4200 + delay);
+  });
+})();
+
+/* ── Navbar scroll shadow ─────────────────────────────────────── */
+(function () {
+  const nav = document.getElementById('mainNav');
+  if (!nav) return;
+  window.addEventListener('scroll', () => {
+    nav.style.boxShadow = window.scrollY > 10
+      ? '0 4px 24px rgba(19,40,78,.14)'
+      : '0 2px 20px rgba(19,40,78,.08)';
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
+

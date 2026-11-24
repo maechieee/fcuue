@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin{% endblock %} | FCUUE Admin Console</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        container: { center: true, padding: '1rem' },
+        extend: {
+          colors: {
+            navy:   { 50:'#e8edf5', 100:'#d0d9ea', 200:'#b8c6de', 500:'#234080', 600:'#1a3566', 700:'#13284e', 800:'#0d1e3a', 900:'#0a1628' },
+            gold:   { 300:'#f0d282', 400:'#d4a84f', 500:'#b28d47', 600:'#9a7a3d' },
+            danger: { 50:'#fef2f2', 100:'#fee2e2', 200:'#fecaca', DEFAULT:'#dc2626', 700:'#b91c1c' },
+            warn:   { 50:'#fffbeb', 100:'#fef3c7', 200:'#fde68a', DEFAULT:'#d97706', 700:'#b45309' },
+            ok:     { 50:'#ecfdf5', 100:'#d1fae5', DEFAULT:'#059669', 700:'#047857' },
+            info:   { 50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', DEFAULT:'#2563eb', 700:'#1d4ed8' },
+            violet: { 100:'#f3e8ff', 200:'#e9d5ff', DEFAULT:'#7c3aed', 700:'#6d28d9' },
+            muted:  { 50:'#f9fafb', 100:'#f3f4f6', 400:'#9ca3af', 500:'#6b7280', 600:'#4b5563', DEFAULT:'#6b7280' },
+          },
+          fontFamily: { inter: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=15">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}?v=12">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="admin-layout">
+
+  <!-- ══ SIDEBAR ═════════════════════════════════════════════════ -->
+  <aside class="admin-sidebar" id="adminSidebar">
+
+    <!-- Brand hero -->
+    <div class="sb-brand">
+      <div class="sb-logo-ring">
+        <img src="{% static 'images/logo.png' %}" alt="FCUUE" class="sb-logo">
+      </div>
+      <div class="sb-school-name">FCUUE</div>
+      <div class="sb-console-label">Admin Console</div>
+    </div>
+    <div class="sb-brand-line"></div>
+
+    <!-- Navigation -->
+    <nav class="sb-nav">
+      <a href="{% url 'manage_dashboard' %}"
+         class="sb-link {% if request.resolver_match.url_name == 'manage_dashboard' %}active{% endif %}">
+        <span data-icon="speedometer2" class="ui-icon"></span><span>Dashboard</span>
+      </a>
+
+      {% if request.user.is_superuser or request.user.profile.role == 'manager' %}
+      <div class="sb-section-label">Catalog</div>
+      <a href="{% url 'manage_products' %}"
+         class="sb-link {% if 'manage_product' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="box-seam" class="ui-icon"></span><span>Uniform Items</span>
+      </a>
+      <a href="{% url 'manage_categories' %}"
+         class="sb-link {% if 'manage_categor' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="diagram-3" class="ui-icon"></span><span>School Levels</span>
+      </a>
+      <a href="{% url 'manage_uniform_types' %}"
+         class="sb-link {% if 'manage_uniform_type' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="layers" class="ui-icon"></span><span>Uniform Types</span>
+      </a>
+      <a href="{% url 'manage_sizes' %}"
+         class="sb-link {% if 'manage_size' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="rulers" class="ui-icon"></span><span>Sizes</span>
+      </a>
+      <a href="{% url 'manage_store_closures' %}"
+         class="sb-link {% if 'manage_store_closure' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="calendar-x" class="ui-icon"></span><span>Store Closures</span>
+      </a>
+      {% endif %}
+
+      <div class="sb-section-label">Orders</div>
+      <a href="{% url 'manage_orders' %}"
+         class="sb-link {% if 'manage_order' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="receipt" class="ui-icon"></span><span>Orders</span>
+      </a>
+      <a href="{% url 'manage_inventory' %}"
+         class="sb-link {% if request.resolver_match.url_name == 'manage_inventory' %}active{% endif %}">
+        <span data-icon="boxes" class="ui-icon"></span><span>Inventory</span>
+      </a>
+      <a href="{% url 'manage_notifications' %}"
+         class="sb-link {% if request.resolver_match.url_name == 'manage_notifications' %}active{% endif %}">
+        <span data-icon="bell" class="ui-icon"></span><span>Notifications</span>
+        {% if notification_count > 0 %}<span class="sb-count">{{ notification_count }}</span>{% endif %}
+      </a>
+
+      {% if request.user.is_superuser or request.user.profile.role == 'manager' %}
+      <div class="sb-section-label">Accounts</div>
+      <a href="{% url 'manage_students' %}"
+         class="sb-link {% if 'manage_student' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="person-lines-fill" class="ui-icon"></span><span>Student Accounts</span>
+      </a>
+      <a href="{% url 'manage_staff' %}"
+         class="sb-link {% if 'manage_staff' in request.resolver_match.url_name %}active{% endif %}">
+        <span data-icon="people" class="ui-icon"></span><span>Staff Accounts</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <!-- Footer links -->
+    <div class="sb-foot">
+      <div class="sb-divider"></div>
+      <a href="{% url 'home' %}" class="sb-link">
+        <span data-icon="shop" class="ui-icon"></span><span>View Store</span>
+      </a>
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="sb-link sb-link-danger w-full text-left border-0 bg-transparent cursor-pointer">
+          <span data-icon="box-arrow-right" class="ui-icon"></span><span>Logout</span>
+        </button>
+      </form>
+    </div>
+
+  </aside>
+
+  <!-- ══ MAIN ══════════════════════════════════════════════════════ -->
+  <div class="admin-main">
+
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <button class="topbar-toggle border-0" id="sidebarToggle">
+        <span data-icon="list" class="ui-icon"></span>
+      </button>
+      <span class="topbar-page-name">{% block page_name %}{% endblock %}</span>
+
+      <div class="ml-auto admin-avatar-wrap">
+        <a href="{% url 'manage_notifications' %}" class="admin-notif-btn" title="Notifications">
+          <span data-icon="bell" class="ui-icon"></span>
+          {% if notification_count > 0 %}<span>{{ notification_count }}</span>{% endif %}
+        </a>
+        <div class="admin-avatar-text">
+          <div class="name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="role">
+            {% if request.user.is_superuser or request.user.profile.role == 'manager' %}Store Manager{% else %}Store Clerk{% endif %}
+          </div>
+        </div>
+        <div class="admin-avatar"><span data-icon="person-fill" class="ui-icon"></span></div>
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% if messages %}
+    <div class="px-5 pt-4">
+      {% for message in messages %}
+      <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-2 text-sm font-semibold
+        {% if message.tags == 'error' %}bg-danger-50 text-danger-700 border border-danger-200
+        {% elif message.tags == 'warning' %}bg-warn-50 text-warn-700 border border-warn-200
+        {% elif message.tags == 'success' %}bg-ok-50 text-ok-700 border border-ok-100
+        {% else %}bg-info-50 text-info-700 border border-info-200{% endif %}" role="alert">
+        <span>{{ message }}</span>
+        <button type="button" class="ml-auto opacity-60 hover:opacity-100 text-lg leading-none bg-transparent border-0 cursor-pointer" onclick="this.parentElement.remove()">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="admin-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ DELETE CONFIRMATION MODAL ═══════════════════════════════════ -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,22,40,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:1.25rem;padding:2rem 2.25rem;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.3);position:relative;animation:dmIn .18s ease;">
+    <div style="width:56px;height:56px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;border:2px solid #fecaca;">
+      <span data-icon="trash3-fill" class="ui-icon" style="color:#dc2626;font-size:1.35rem;"></span>
+    </div>
+    <h5 style="text-align:center;font-weight:800;color:#13284e;margin:0 0 .4rem;font-size:1.1rem;">Delete this item?</h5>
+    <p id="deleteModalDesc" style="text-align:center;color:#6b7280;font-size:.875rem;margin:0 0 1.6rem;line-height:1.55;"></p>
+    <div style="display:flex;gap:.7rem;">
+      <button type="button" id="deleteModalCancel"
+              style="flex:1;padding:.75rem 1rem;border:1.5px solid #e5e7eb;border-radius:.875rem;font-weight:700;font-size:.875rem;color:#374151;background:#fff;cursor:pointer;transition:all .15s;">
+        Cancel
+      </button>
+      <form id="deleteModalForm" method="POST" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit"
+                style="width:100%;padding:.75rem 1rem;border:none;border-radius:.875rem;font-weight:700;font-size:.875rem;color:#fff;background:linear-gradient(135deg,#ef4444,#dc2626);cursor:pointer;box-shadow:0 4px 14px rgba(220,38,38,.35);transition:all .15s;">
+          <span data-icon="trash3" class="ui-icon mr-1"></span>Yes, Delete
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes dmIn { from { opacity:0; transform:scale(.93) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+</style>
+
+<script src="{% static 'js/icons.js' %}?v=1"></script>
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+(function () {
+  const modal   = document.getElementById('deleteModal');
+  const desc    = document.getElementById('deleteModalDesc');
+  const form    = document.getElementById('deleteModalForm');
+  const cancel  = document.getElementById('deleteModalCancel');
+
+  window.openDeleteModal = function (action, name) {
+    form.action = action;
+    desc.textContent = 'You are about to delete "' + name + '". This action cannot be undone.';
+    modal.style.display = 'flex';
+  };
+
+  function close() { modal.style.display = 'none'; }
+
+  cancel.addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
+<script>
+const _sidebar  = document.getElementById('adminSidebar');
+const _backdrop = document.getElementById('sidebarBackdrop');
+const _toggle   = document.getElementById('sidebarToggle');
+
+function _closeMobile() {
+  _sidebar.classList.remove('show');
+  _backdrop.classList.remove('show');
+}
+_toggle?.addEventListener('click', () => {
+  if (window.innerWidth < 992) {
+    _sidebar.classList.toggle('show');
+    _backdrop.classList.toggle('show');
+  } else {
+    _sidebar.classList.toggle('collapsed');
+  }
+});
+_backdrop?.addEventListener('click', _closeMobile);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
+

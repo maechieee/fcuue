@@ -1,0 +1,55 @@
+{% extends 'manage/base_manage.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_name %}Notifications{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+  <div>
+    <h2 class="admin-page-title">Notifications</h2>
+    <p class="admin-page-subtitle">New orders, cancellations, and store activity that need attention.</p>
+  </div>
+  {% if notifications %}
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn-admin-primary">
+      <span data-icon="check" class="ui-icon"></span>Mark All Read
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="admin-table-wrap admin-notification-wrap">
+  {% if notifications %}
+    {% for notification in notifications %}
+    <div class="admin-notification-row {% if not notification.is_read %}unread{% endif %}">
+      <div class="admin-notification-icon">
+        <span data-icon="bell" class="ui-icon"></span>
+      </div>
+      <div class="admin-notification-body">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="admin-notification-title">{{ notification.title }}</div>
+            <div class="admin-notification-message">{{ notification.message }}</div>
+          </div>
+          {% if not notification.is_read %}
+          <span class="status-badge badge-confirmed">New</span>
+          {% endif %}
+        </div>
+        <div class="admin-notification-meta">
+          <span>{{ notification.created_at|date:"M d, Y g:i A" }}</span>
+          {% if notification.order %}
+            <a href="{% url 'manage_notification_order_redirect' notification.pk %}">View Order #{{ notification.order.pk }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="admin-empty-state">
+      <span data-icon="bell" class="ui-icon"></span>
+      <div class="font-bold mt-2">No admin notifications yet</div>
+      <p>New student orders and cancellations will appear here.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

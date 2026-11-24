@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1><span data-icon="bag-check" class="ui-icon mr-2"></span>Checkout</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cart' %}">Cart</a></li>
+        <li class="breadcrumb-item active">Checkout</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4" data-fade>
+  <!-- Steps indicator -->
+  <div class="flex items-center gap-2 mb-4 text-muted-500 text-sm font-semibold">
+    <span class="inline-flex items-center px-3 py-2 rounded-lg bg-ok-100 text-ok-700 text-xs font-bold"><span data-icon="check" class="ui-icon mr-1"></span>Cart</span>
+    <span data-icon="chevron-right" class="ui-icon" style="font-size:.7rem;"></span>
+    <span class="inline-flex items-center px-3 py-2 rounded-lg bg-navy-50 text-navy-700 text-xs font-bold">Contact Info</span>
+    <span data-icon="chevron-right" class="ui-icon" style="font-size:.7rem;"></span>
+    <span class="inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold" style="background:var(--bg);color:var(--text-muted);">Confirm</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- Form Column -->
+    <div class="lg:col-span-7">
+      <!-- Pickup Banner -->
+      <div class="pickup-banner mb-4">
+        <div class="pickup-icon"><span data-icon="geo-alt-fill" class="ui-icon"></span></div>
+        <div>
+          <div class="font-bold">University Enterprise — Campus Ground Floor</div>
+          <div class="text-sm text-muted-500 mt-1">
+            Pick up your order once it is marked
+            <span class="font-bold text-ok">Ready for Pickup</span>.
+            Bring your Order ID and a valid school ID.
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow p-4">
+        <h5 class="font-extrabold mb-4" style="letter-spacing:-.3px;">Contact Information</h5>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label font-semibold">Email Address <span class="text-danger">*</span></label>
+            {{ form.contact_email }}
+            <div class="form-text mt-1"><span data-icon="info-circle" class="ui-icon mr-1"></span>We'll send order updates and pickup notices to this email.</div>
+            {% if form.contact_email.errors %}
+              <div class="text-danger text-sm mt-1">{{ form.contact_email.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-gradient btn-lg w-full font-bold">
+            <span data-icon="check-circle" class="ui-icon mr-2"></span>Place Order
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Review -->
+    <div class="lg:col-span-5">
+      <div class="cart-summary-card">
+        <h5 class="font-extrabold mb-3" style="letter-spacing:-.3px;">Order Review</h5>
+
+        <div style="max-height:300px;overflow-y:auto;">
+          {% for item in items %}
+          <div class="flex items-center gap-3 py-2 {% if not forloop.last %}border-b border-navy-100{% endif %}">
+            <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;background:var(--bg);flex-shrink:0;">
+              {% if item.variant.product.image %}
+                <img src="{{ item.variant.product.image.url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center text-muted-500"><span data-icon="image" class="ui-icon"></span></div>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-sm truncate">{{ item.variant.product.name }}</div>
+              <div class="x-small text-muted-500">Size {{ item.variant.size.code }} &times; {{ item.quantity }}</div>
+            </div>
+            <div class="font-bold text-sm flex-shrink-0">&#8369;{{ item.get_subtotal }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <hr class="my-3">
+        <div class="flex justify-between mb-1">
+          <span class="text-muted-500 text-sm">Subtotal</span>
+          <span class="font-semibold">&#8369;{{ cart.get_total }}</span>
+        </div>
+        <div class="flex justify-between mb-3">
+          <span class="text-muted-500 text-sm">Pickup</span>
+          <span class="font-semibold text-ok">Free</span>
+        </div>
+        <div class="flex justify-between items-center p-3 rounded-xl" style="background:var(--primary-soft);border:1.5px solid rgba(19,40,78,.15);">
+          <span class="font-bold">Total</span>
+          <span class="font-black text-primary text-2xl">&#8369;{{ cart.get_total }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+

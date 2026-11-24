@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.pk }}{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h1>Order #{{ order.pk }}</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'order_list' %}">My Orders</a></li>
+            <li class="breadcrumb-item active">#{{ order.pk }}</li>
+          </ol>
+        </nav>
+      </div>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold
+        {% if order.status == 'pending' %}bg-warn-100 text-warn-700
+        {% elif order.status == 'confirmed' %}bg-info-100 text-info-700
+        {% elif order.status == 'processing' %}bg-violet-100 text-violet-700
+        {% elif order.status == 'ready' %}bg-ok-100 text-ok-700
+        {% elif order.status == 'completed' %}bg-muted-100 text-muted-600
+        {% else %}bg-danger-100 text-danger-700{% endif %}" style="font-size:.85rem;">
+        {{ order.get_status_display }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Status Tracker -->
+  {% with s=order.status %}
+  <div class="bg-white rounded-2xl shadow p-4 mb-4">
+    <h6 class="fw-700 mb-3">Order Progress</h6>
+    {% if s != 'cancelled' and s != 'rejected' and s != 'expired' and s != 'refunded' %}
+    <div class="status-track">
+      <div class="st-step {% if s == 'pending' %}active{% elif s != 'pending' %}done{% endif %}">
+        <div class="st-dot"><span data-icon="{% if s == 'pending' %}clock{% else %}check{% endif %}" class="ui-icon"></span></div>
+        <span class="st-label">Pending</span>
+      </div>
+      <div class="st-step {% if s == 'confirmed' %}active{% elif s == 'processing' or s == 'ready' or s == 'completed' %}done{% endif %}">
+        <div class="st-dot"><span data-icon="{% if s == 'processing' or s == 'ready' or s == 'completed' %}check{% else %}clipboard-check{% endif %}" class="ui-icon"></span></div>
+        <span class="st-label">Approved</span>
+      </div>
+      <div class="st-step {% if s == 'processing' %}active{% elif s == 'ready' or s == 'completed' %}done{% endif %}">
+        <div class="st-dot"><span data-icon="{% if s == 'ready' or s == 'completed' %}check{% else %}gear{% endif %}" class="ui-icon"></span></div>
+        <span class="st-label">Preparing</span>
+      </div>
+      <div class="st-step {% if s == 'ready' %}active{% elif s == 'completed' %}done{% endif %}">
+        <div class="st-dot"><span data-icon="{% if s == 'completed' %}check{% else %}bag-check{% endif %}" class="ui-icon"></span></div>
+        <span class="st-label">Ready</span>
+      </div>
+      <div class="st-step {% if s == 'completed' %}done{% endif %}">
+        <div class="st-dot"><span data-icon="check-all" class="ui-icon"></span></div>
+        <span class="st-label">Claimed</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="flex items-center gap-2 text-danger fw-600">
+      <span data-icon="x-circle-fill" class="ui-icon"></span> This order is marked as {{ order.get_status_display|lower }}.
+    </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <!-- Items -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+          <h6 class="fw-700 mb-0">Items Ordered</h6>
+        </div>
+        {% for item in order.items.all %}
+        <div class="flex items-center gap-3 p-4 {% if not forloop.last %}border-b border-navy-100{% endif %}">
+          <div style="width:72px;height:72px;border-radius:10px;overflow:hidden;background:var(--bg);flex-shrink:0;">
+            {% if item.variant.product.image %}
+              <img src="{{ item.variant.product.image.url }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ item.variant.product.name }}">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center" style="color:rgba(19,40,78,.15);font-size:1.5rem;"><span data-icon="image" class="ui-icon"></span></div>
+            {% endif %}
+          </div>
+          <div class="flex-1">
+            <div class="fw-700">{{ item.variant.product.name }}</div>
+            <div class="text-muted-500 text-sm mt-1">
+              Size <span class="badge" style="background:var(--bg);color:var(--text-muted);font-weight:600;">{{ item.variant.size.code }}</span>
+              &times; {{ item.quantity }}
+            </div>
+            <div class="text-muted-500 x-small">&#8369;{{ item.unit_price }} each</div>
+          </div>
+          <div class="fw-800 text-primary fs-6">&#8369;{{ item.get_subtotal }}</div>
+        </div>
+        {% endfor %}
+        <div class="p-4 border-t border-navy-100 flex justify-between items-center" style="background:var(--surface-2);">
+          <span class="fw-700">Total</span>
+          <span class="fw-900 text-primary fs-4">&#8369;{{ order.subtotal }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar info -->
+    <div class="lg:col-span-4">
+      <!-- Pickup Info -->
+      <div class="bg-white rounded-2xl shadow overflow-hidden mb-3">
+        <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+          <h6 class="fw-700 mb-0"><span data-icon="geo-alt-fill" class="ui-icon text-primary mr-2"></span>Pickup Info</h6>
+        </div>
+        <div class="p-4">
+          <div class="mb-3">
+            <div class="x-small text-muted-500 fw-600 text-uppercase mb-1">Location</div>
+            <div class="fw-600">University Enterprise</div>
+            <div class="text-muted-500 text-sm">Campus Ground Floor</div>
+          </div>
+          <div class="mb-3">
+            <div class="x-small text-muted-500 fw-600 text-uppercase mb-1">Pickup Date</div>
+            {% if order.pickup_date %}
+              <div class="fw-600">{{ order.pickup_date|date:"F d, Y" }}</div>
+            {% elif can_choose_pickup_date %}
+              <a href="{% url 'order_pickup_date' order.pk %}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-navy-700 text-white rounded-lg text-xs font-semibold hover:bg-navy-600 transition-colors">
+                Choose Pickup Date
+              </a>
+            {% elif order.status == 'pending' %}
+              <div class="text-muted-500 text-sm">Available after approval</div>
+            {% else %}
+              <div class="text-muted-500 text-sm">Not scheduled</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <div class="x-small text-muted-500 fw-600 text-uppercase mb-1">Contact Email</div>
+            <div class="fw-600 break-all">{{ order.contact_email }}</div>
+          </div>
+          {% if order.notes %}
+          <div>
+            <div class="x-small text-muted-500 fw-600 text-uppercase mb-1">Notes</div>
+            <div class="fw-600">{{ order.notes }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="bg-white rounded-2xl shadow overflow-hidden mb-3">
+        <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+          <h6 class="fw-700 mb-0"><span data-icon="clock-history" class="ui-icon mr-2 text-primary"></span>Timeline</h6>
+        </div>
+        <div class="p-4">
+          <div class="flex justify-between mb-2">
+            <span class="text-muted-500 text-sm">Order Placed</span>
+            <span class="text-sm fw-600">{{ order.created_at|date:"M d, Y" }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted-500 text-sm">Last Updated</span>
+            <span class="text-sm fw-600">{{ order.updated_at|date:"M d, Y" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <a href="{% url 'order_list' %}" class="inline-flex items-center gap-1 px-4 py-2 border border-navy-200 text-muted-600 rounded-xl text-sm font-semibold hover:bg-navy-50 transition-colors w-full justify-center fw-600">
+        <span data-icon="arrow-left" class="ui-icon mr-2"></span>Back to My Orders
+      </a>
+      {% if can_view_receipt %}
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <a href="{% url 'order_receipt' order.pk %}" class="inline-flex items-center justify-center gap-1 px-4 py-2 bg-navy-700 text-white rounded-xl text-sm font-semibold hover:bg-navy-600 transition-colors">
+          <span data-icon="receipt" class="ui-icon mr-1"></span>View Slip
+        </a>
+        <a href="{% url 'order_receipt' order.pk %}?download=1" class="inline-flex items-center justify-center gap-1 px-4 py-2 border border-navy-200 text-muted-600 rounded-xl text-sm font-semibold hover:bg-navy-50 transition-colors">
+          <span data-icon="download" class="ui-icon mr-1"></span>Download
+        </a>
+      </div>
+      {% endif %}
+      {% if order.status == 'pending' %}
+      <button type="button" onclick="document.getElementById('cancelModal').style.display='flex'"
+              class="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+              style="background:#dc2626;border:none;cursor:pointer;">
+        <span data-icon="x-circle-fill" class="ui-icon"></span>Cancel Order
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if order.status == 'pending' %}
+<!-- Cancel confirmation modal -->
+<div id="cancelModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,22,40,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:1.25rem;padding:2rem 2.25rem;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.3);animation:dmIn .18s ease;">
+    <div style="width:56px;height:56px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;border:2px solid #fecaca;">
+      <span data-icon="x-circle-fill" class="ui-icon" style="color:#dc2626;font-size:1.35rem;"></span>
+    </div>
+    <h5 style="text-align:center;font-weight:800;color:#13284e;margin:0 0 .4rem;font-size:1.1rem;">Cancel this order?</h5>
+    <p style="text-align:center;color:#6b7280;font-size:.875rem;margin:0 0 1.6rem;line-height:1.55;">Order #{{ order.pk }} will be cancelled. This cannot be undone.</p>
+    <div style="display:flex;gap:.7rem;">
+      <button type="button" onclick="document.getElementById('cancelModal').style.display='none'"
+              style="flex:1;padding:.75rem 1rem;border:1.5px solid #e5e7eb;border-radius:.875rem;font-weight:700;font-size:.875rem;color:#374151;background:#fff;cursor:pointer;">
+        Keep Order
+      </button>
+      <form method="POST" action="{% url 'order_cancel' order.pk %}" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit"
+                style="width:100%;padding:.75rem 1rem;border:none;border-radius:.875rem;font-weight:700;font-size:.875rem;color:#fff;background:linear-gradient(135deg,#ef4444,#dc2626);cursor:pointer;box-shadow:0 4px 14px rgba(220,38,38,.35);">
+          Yes, Cancel
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('cancelModal').addEventListener('click', function(e){
+  if(e.target===this) this.style.display='none';
+});
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') document.getElementById('cancelModal').style.display='none';
+});
+</script>
+{% endif %}
+{% endblock %}
+

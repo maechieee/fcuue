@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+  .notifications-shell {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .notification-card {
+    background: #fff;
+    border: 1px solid rgba(19,40,78,.08);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(19,40,78,.08);
+    padding: 1rem;
+  }
+
+  .page-header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .45rem 1rem;
+    border-radius: .75rem;
+    font-size: .875rem;
+    font-weight: 700;
+    background: rgba(255,255,255,.1);
+    border: 1.5px solid rgba(255,255,255,.3);
+    color: #fff;
+    cursor: pointer;
+    transition: background .18s, border-color .18s;
+  }
+  .page-header-btn:hover {
+    background: rgba(255,255,255,.2);
+    border-color: rgba(255,255,255,.5);
+    color: #fff;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h1><span data-icon="bell" class="ui-icon mr-2"></span>Notifications</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Notifications</li>
+          </ol>
+        </nav>
+      </div>
+      {% if notifications %}
+      <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="page-header-btn">
+          <span data-icon="check" class="ui-icon"></span>Mark All Read
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container py-4" data-fade>
+  <div class="notifications-shell">
+  {% if notifications %}
+    <div class="flex flex-col gap-3">
+      {% for notification in notifications %}
+      <div class="notification-card {% if notification.is_read %}border-navy-100{% else %}border-navy-200{% endif %}"
+           style="{% if not notification.is_read %}box-shadow:0 14px 40px rgba(19,40,78,.12);{% endif %}">
+        <div class="flex gap-3">
+          <div class="flex items-center justify-center rounded-xl flex-shrink-0"
+               style="width:44px;height:44px;background:{% if notification.is_read %}#f3f4f6{% else %}var(--primary-soft){% endif %};color:var(--primary);">
+            <span data-icon="bell" class="ui-icon"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-extrabold" style="color:var(--text);">{{ notification.title }}</div>
+                <div class="text-sm text-muted-500 mt-1">{{ notification.message }}</div>
+              </div>
+              {% if not notification.is_read %}
+                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-navy-50 text-navy-700">New</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center justify-between gap-3 mt-3 text-xs text-muted-400">
+              <span>{{ notification.created_at|date:"M d, Y g:i A" }}</span>
+              {% if notification.order %}
+                <a href="{% url 'notification_order_redirect' notification.pk %}" class="font-bold text-navy-700 hover:text-navy-600">View Order #{{ notification.order.pk }}</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><span data-icon="bell" class="ui-icon"></span></div>
+      <h4>No notifications yet</h4>
+      <p>Order updates will appear here when the store reviews your orders.</p>
+      <a href="{% url 'product_list' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-navy-600">
+        <span data-icon="bag-plus" class="ui-icon"></span>Browse Uniforms
+      </a>
+    </div>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

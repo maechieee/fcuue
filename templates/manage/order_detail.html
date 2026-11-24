@@ -1,0 +1,148 @@
+{% extends 'manage/base_manage.html' %}
+
+{% block title %}Order #{{ order.pk }}{% endblock %}
+{% block page_name %}Order #{{ order.pk }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+  <a href="{% url 'manage_orders' %}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-navy-200 text-muted-500 rounded-lg text-xs font-semibold hover:bg-navy-50 transition-colors"><span data-icon="arrow-left" class="ui-icon"></span></a>
+  <h3 class="font-bold mb-0">Order #{{ order.pk }}</h3>
+  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold {% if order.status == 'pending' %}bg-warn-100 text-warn-700{% elif order.status == 'confirmed' %}bg-info-100 text-info-700{% elif order.status == 'processing' %}bg-violet-100 text-violet-700{% elif order.status == 'ready' %}bg-ok-100 text-ok-700{% elif order.status == 'completed' %}bg-muted-100 text-muted-600{% else %}bg-danger-100 text-danger-700{% endif %}">{{ order.get_status_display }}</span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <!-- Items -->
+  <div class="lg:col-span-8">
+    <div class="bg-white rounded-2xl shadow p-4 mb-4">
+      <h6 class="font-bold mb-3">Order Items</h6>
+      {% for item in order.items.all %}
+      <div class="flex items-center gap-3 mb-3 {% if not forloop.last %}border-b border-navy-100 pb-3{% endif %}">
+        {% if item.variant.product.image %}
+          <img src="{{ item.variant.product.image.url }}" class="rounded" style="width:60px;height:60px;object-fit:cover;">
+        {% endif %}
+        <div class="flex-1">
+          <div class="font-semibold">{{ item.variant.product.name }}</div>
+          <div class="text-muted-500 text-sm">Size: {{ item.variant.size.code }} &times; {{ item.quantity }}</div>
+          <div class="text-muted-500 text-sm">Unit price: &#8369;{{ item.unit_price }}</div>
+        </div>
+        <div class="font-bold">&#8369;{{ item.get_subtotal }}</div>
+      </div>
+      {% endfor %}
+      <hr class="my-3 border-navy-100">
+      <div class="flex items-center justify-between font-bold text-xl">
+        <span>Total</span>
+        <span class="text-primary">&#8369;{{ order.subtotal }}</span>
+      </div>
+    </div>
+
+    <!-- Update Status -->
+    <div class="bg-white rounded-2xl shadow p-4">
+      <h6 class="font-bold mb-3">Allowed Order Action</h6>
+      {% if order.status == 'confirmed' and not order.pickup_date %}
+      <div class="rounded-xl p-3 text-sm font-semibold mb-3"
+           style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+        Waiting for the student to set a pickup date before this can be moved to Preparing.
+      </div>
+      {% endif %}
+      {% if transition_choices %}
+      <form method="POST" class="flex gap-3 items-end">
+        {% csrf_token %}
+        <div class="flex-1">
+          <label class="font-semibold text-sm block mb-1">Next action</label>
+          {{ form.status }}
+        </div>
+        <button type="submit" class="inline-flex items-center gap-1 px-4 py-2 bg-navy-700 text-white rounded-xl text-sm font-semibold hover:bg-navy-600 transition-colors">Apply</button>
+      </form>
+      {% else %}
+      <div class="text-muted-500 text-sm">No further actions are available for this order.</div>
+      {% endif %}
+      <div class="text-muted-500 text-sm mt-2">
+        Staff can only move orders forward. Managers get limited override actions such as cancel, expire, or refund.
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer & Pickup Info -->
+  <div class="lg:col-span-4">
+    <div class="bg-white rounded-2xl shadow p-4 mb-3">
+      <h6 class="font-bold mb-3">Customer</h6>
+      <div class="mb-2">
+        <div class="text-muted-500 text-sm">Name</div>
+        <div class="font-semibold">{{ order.user.get_full_name|default:order.user.username }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="text-muted-500 text-sm">Account Email</div>
+        <div class="font-semibold">{{ order.user.email }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="text-muted-500 text-sm">Contact Email</div>
+        <div class="font-semibold break-all">{{ order.contact_email }}</div>
+      </div>
+      <div class="mb-2">
+        <div class="text-muted-500 text-sm">Pickup Date</div>
+        <div class="font-semibold">
+          {% if order.pickup_date %}{{ order.pickup_date|date:"F d, Y" }}{% else %}Not scheduled{% endif %}
+        </div>
+      </div>
+      {% if order.notes %}
+      <div>
+        <div class="text-muted-500 text-sm">Notes</div>
+        <div class="font-semibold">{{ order.notes }}</div>
+      </div>
+      {% endif %}
+      <div class="mt-3 pt-3 border-t border-navy-100">
+        <div class="text-muted-500 text-sm">Inventory</div>
+        <div class="font-semibold">
+          {% if order.stock_deducted %}Stock deducted{% else %}Awaiting approval{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-4 mb-3">
+      <h6 class="font-bold mb-3"><span data-icon="geo-alt" class="ui-icon mr-2 text-primary"></span>Pickup</h6>
+      <div class="font-semibold">School Uniform Shop</div>
+      <div class="text-muted-500 text-sm">Student will pick up on campus.</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-4">
+      <h6 class="font-bold mb-3">Timeline</h6>
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-muted-500 text-sm">Order Placed</span>
+        <span class="text-sm">{{ order.created_at|date:"M d, Y h:i A" }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-muted-500 text-sm">Last Updated</span>
+        <span class="text-sm">{{ order.updated_at|date:"M d, Y h:i A" }}</span>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-4 mt-3">
+      <h6 class="font-bold mb-3">Status History</h6>
+      {% if status_history %}
+        <div class="space-y-3">
+          {% for entry in status_history %}
+          <div class="flex gap-3 {% if not forloop.last %}border-b border-navy-100 pb-3{% endif %}">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
+              <span data-icon="clock" class="ui-icon"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-sm">
+                {{ entry.get_from_status_label }} &rarr; {{ entry.get_to_status_display }}
+              </div>
+              <div class="text-muted-500 text-xs">
+                {{ entry.get_actor_label }} &bull; {{ entry.created_at|date:"M d, Y h:i A" }}
+              </div>
+              {% if entry.note %}
+              <div class="text-muted-500 text-xs mt-1">{{ entry.note }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="rounded-xl border border-navy-100 bg-muted-50 p-3 text-sm text-muted-500">
+          No status history has been recorded for this order yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

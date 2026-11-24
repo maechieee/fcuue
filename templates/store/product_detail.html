@@ -1,0 +1,609 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .product-crumbs,
+  .product-crumbs li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .product-media-panel {
+    background:
+      radial-gradient(circle at 20% 12%, rgba(178,141,71,.18), transparent 28%),
+      linear-gradient(155deg,#0a1628 0%,#13284e 60%,#1a3566 100%);
+    padding: 4.7rem 1.25rem 2rem;
+    min-height: 520px;
+  }
+
+  .product-gallery-stage {
+    width: min(100%, 520px);
+    aspect-ratio: 4 / 3;
+    border-radius: 1.35rem;
+    overflow: hidden;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 32px 64px rgba(0,0,0,.38);
+    cursor: zoom-in;
+  }
+
+  .product-gallery-stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: rgba(255,255,255,.04);
+    transition: opacity .2s ease;
+  }
+
+  .product-gallery-stage.is-out {
+    opacity: .72;
+    filter: grayscale(.18);
+  }
+
+  .product-stock-ribbon {
+    margin-top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1rem;
+    border-radius: 999px;
+    color: #fecaca;
+    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(248,113,113,.24);
+    font-weight: 800;
+    font-size: .82rem;
+  }
+
+  .gallery-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    overflow: hidden;
+    padding: 3px;
+    border: 2px solid rgba(255,255,255,.18);
+    cursor: pointer;
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  }
+
+  .gallery-thumb:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,.14);
+  }
+
+  .gallery-thumb.active {
+    border-color: rgba(178,141,71,.95);
+    background: rgba(178,141,71,.14);
+  }
+
+  .gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+
+  .product-preview-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(10,22,40,.78);
+    backdrop-filter: blur(6px);
+  }
+
+  .product-preview-modal.show {
+    display: flex;
+  }
+
+  .product-preview-dialog {
+    position: relative;
+    width: min(100%, 900px);
+    max-height: 90vh;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 28px 80px rgba(0,0,0,.42);
+    animation: dmIn .18s ease;
+  }
+
+  .product-preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .9rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .product-preview-title {
+    margin: 0;
+    color: var(--text);
+    font-size: .95rem;
+    font-weight: 900;
+  }
+
+  .product-preview-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+  }
+
+  .product-preview-close:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .product-preview-image-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: #f8fafc;
+  }
+
+  .product-preview-image-wrap img {
+    max-width: 100%;
+    max-height: 74vh;
+    object-fit: contain;
+    border-radius: .85rem;
+    background: #fff;
+  }
+
+  @media (max-width: 640px) {
+    .product-media-panel {
+      padding: 4.25rem 1rem 1.5rem;
+      min-height: 420px;
+    }
+    .product-gallery-stage {
+      aspect-ratio: 1 / 1;
+      border-radius: 1rem;
+    }
+    .gallery-thumb {
+      width: 56px;
+      height: 56px;
+    }
+    .product-preview-dialog {
+      border-radius: 1rem;
+    }
+    .product-preview-image-wrap img {
+      max-height: 70vh;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1>{{ product.name }}</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="product-crumbs breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Shop</a></li>
+        {% with product.category.all|first as first_cat %}
+          {% if first_cat %}
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ first_cat.slug }}">{{ first_cat.name }}</a></li>
+          {% endif %}
+        {% endwith %}
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2rem;padding-bottom:3.5rem;">
+
+  <!-- ── Split Card ─────────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2"
+       style="border-radius:1.5rem;overflow:hidden;box-shadow:0 24px 72px rgba(19,40,78,.18);">
+
+    <!-- Left: Navy Image Panel -->
+    <div class="product-media-panel flex flex-col items-center justify-center relative">
+
+      <!-- Uniform type badge -->
+      {% if product.uniform_type %}
+      <div class="absolute top-5 left-5">
+        <span class="flex items-center gap-1 text-xs font-extrabold px-3 py-1.5 rounded-lg tracking-widest uppercase"
+              style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.88);
+                     border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);">
+          <span data-icon="tag-fill" class="ui-icon" style="font-size:.55rem;"></span>{{ product.uniform_type.name }}
+        </span>
+      </div>
+      {% endif %}
+
+      <!-- Stock badge -->
+      <div class="absolute top-5 right-5">
+        {% if product.in_stock %}
+        <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg"
+              style="background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.22);">
+          <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;flex-shrink:0;"></span>
+          In Stock
+        </span>
+        {% else %}
+        <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg"
+              style="background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.22);">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f87171;flex-shrink:0;"></span>
+          Out of Stock
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Product gallery stage -->
+      <div class="product-gallery-stage {% if not product.in_stock %}is-out{% endif %}">
+        {% if product.image %}
+          <img id="gallery-main" src="{{ product.image.url }}"
+               alt="{{ product.name }}"
+               onclick="openProductPreview(this.src)">
+        {% else %}
+          <div class="w-full h-full flex items-center justify-center"
+               style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.18);font-size:5rem;">
+            <span data-icon="image" class="ui-icon"></span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Category pills -->
+      <div class="flex flex-wrap gap-1.5 mt-5 justify-center">
+        {% for cat in product.category.all %}
+        <span class="text-xs font-semibold px-3 py-1 rounded-full"
+              style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.58);
+                     border:1px solid rgba(255,255,255,.12);">
+          {{ cat.name }}
+        </span>
+        {% endfor %}
+      </div>
+
+      <!-- Gallery thumbnails -->
+      {% if gallery %}
+      <div class="flex flex-wrap gap-2 mt-4 justify-center">
+        {% if product.image %}
+        <button type="button" class="gallery-thumb active"
+                onclick="switchImage(this,'{{ product.image.url }}')">
+          <img src="{{ product.image.url }}" alt="">
+        </button>
+        {% endif %}
+        {% for img in gallery %}
+        <button type="button" class="gallery-thumb"
+                onclick="switchImage(this,'{{ img.image.url }}')">
+          <img src="{{ img.image.url }}" alt="">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if not product.in_stock %}
+      <div class="product-stock-ribbon">
+        <span data-icon="clock" class="ui-icon"></span>Out of Stock
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: White Info Panel -->
+    <div class="bg-white flex flex-col justify-center" style="padding:2.5rem 2.25rem;">
+
+      <!-- Product name -->
+      <h1 class="font-black mb-2"
+          style="font-size:clamp(1.5rem,2.8vw,2rem);letter-spacing:-.5px;line-height:1.15;color:var(--text);">
+        {{ product.name }}
+      </h1>
+
+      <!-- Price + availability -->
+      {% if variants or product.in_stock %}
+      <div class="flex items-baseline flex-wrap gap-3 mb-3">
+        {% if variants %}
+          <span id="livePrice" class="font-black"
+                style="font-size:2.75rem;letter-spacing:-.8px;line-height:1;color:#b28d47;">
+            &#8369;{{ variants.0.get_price }}
+          </span>
+          <span id="priceNote" class="text-sm font-semibold"
+                style="display:none;color:var(--text-muted);">varies by size</span>
+        {% else %}
+          <span class="font-black"
+                style="font-size:2.75rem;letter-spacing:-.8px;color:var(--text-light);">—</span>
+        {% endif %}
+        {% if product.in_stock %}
+        <span class="text-xs font-bold text-ok-700">
+          {{ product.total_stock }} pcs available
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Description -->
+      {% if product.description %}
+      <p class="text-sm mb-5 pb-5"
+         style="color:var(--text-muted);line-height:1.85;border-bottom:1.5px solid var(--border);">
+        {{ product.description }}
+      </p>
+      {% else %}
+      <div class="mb-5"></div>
+      {% endif %}
+
+      {% if variants %}
+        {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'add_to_cart' %}">
+          {% csrf_token %}
+          <input type="hidden" name="variant_id" id="variantInput" value="{{ variants.0.id }}">
+
+          <!-- Size selector (pure Tailwind + Vanilla JS) -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-sm font-extrabold" style="color:var(--text);">Select Size</span>
+              <span id="stockNote" class="text-xs font-semibold" style="color:var(--text-muted);"></span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="sizeGrid">
+              {% for variant in variants %}
+              <button type="button"
+                      class="size-chip flex flex-col items-center justify-center rounded-xl font-bold text-sm cursor-pointer transition-all duration-150"
+                      style="min-width:60px;height:58px;padding:.3rem .75rem;border:none;"
+                      data-variant="{{ variant.id }}"
+                      data-price="{{ variant.get_price }}"
+                      data-stock="{{ variant.stock }}"
+                      onclick="selectSize(this)">
+                <span>{{ variant.size.code }}</span>
+                <span class="size-chip-sub" style="font-size:.62rem;font-weight:500;">{{ variant.stock }} left</span>
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Quantity + Subtotal -->
+          <div class="flex items-end gap-5 flex-wrap mb-5">
+            <div>
+              <div class="text-sm font-extrabold mb-2" style="color:var(--text);">Quantity</div>
+              <div class="flex items-center rounded-xl overflow-hidden"
+                   style="border:2px solid var(--border);background:#fff;">
+                <button type="button" id="qtyMinus"
+                        class="flex items-center justify-center transition-colors"
+                        style="width:44px;height:46px;border:none;background:transparent;
+                               cursor:pointer;color:var(--primary);font-size:1.1rem;"
+                        onmouseover="this.style.background='var(--primary-soft)'"
+                        onmouseout="this.style.background='transparent'">
+                  <span data-icon="dash" class="ui-icon"></span>
+                </button>
+                <span style="width:1.5px;height:22px;background:var(--border);flex-shrink:0;"></span>
+                <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="99"
+                       class="qty-field"
+                       style="width:52px;height:46px;border:none;text-align:center;
+                              font-size:1rem;font-weight:900;color:var(--text);background:transparent;">
+                <span style="width:1.5px;height:22px;background:var(--border);flex-shrink:0;"></span>
+                <button type="button" id="qtyPlus"
+                        class="flex items-center justify-center transition-colors"
+                        style="width:44px;height:46px;border:none;background:transparent;
+                               cursor:pointer;color:var(--primary);font-size:1.1rem;"
+                        onmouseover="this.style.background='var(--primary-soft)'"
+                        onmouseout="this.style.background='transparent'">
+                  <span data-icon="plus" class="ui-icon"></span>
+                </button>
+              </div>
+            </div>
+
+            <div style="flex:1;min-width:120px;">
+              <div class="text-sm font-extrabold mb-1.5" style="color:var(--text);">Subtotal</div>
+              <div id="subtotalDisplay" class="font-black"
+                   style="font-size:2.1rem;color:#b28d47;letter-spacing:-.4px;line-height:1;">
+                &#8369;{{ variants.0.get_price }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Add to Cart -->
+          <button type="submit"
+                  class="w-full flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl text-white transition-all duration-200"
+                  style="padding:.9rem 1.5rem;border:none;cursor:pointer;letter-spacing:-.2px;
+                         background:linear-gradient(135deg,var(--primary),var(--primary-mid));
+                         box-shadow:0 6px 20px rgba(19,40,78,.28);"
+                  onmouseover="this.style.boxShadow='0 10px 28px rgba(19,40,78,.4)';this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.boxShadow='0 6px 20px rgba(19,40,78,.28)';this.style.transform='translateY(0)'">
+            <span data-icon="bag-plus" class="ui-icon"></span>Add to Cart
+          </button>
+        </form>
+
+        {% else %}
+        <!-- Login prompt -->
+        <div class="flex items-center gap-4 rounded-2xl p-5"
+             style="background:var(--primary-soft);border:1.5px solid rgba(19,40,78,.12);">
+          <div class="flex-shrink-0 flex items-center justify-center rounded-full w-12 h-12"
+               style="background:linear-gradient(135deg,var(--primary),var(--primary-mid));
+                      box-shadow:0 4px 12px rgba(19,40,78,.22);">
+            <span data-icon="person-fill" class="ui-icon text-white text-lg"></span>
+          </div>
+          <div>
+            <div class="font-extrabold text-sm" style="color:var(--text);">Sign in to order</div>
+            <div class="text-xs mt-1" style="color:var(--text-muted);">
+              <a href="{% url 'login' %}?next={{ request.path }}"
+                 class="font-bold" style="color:var(--primary);">Log in</a>
+              to add this item to your cart.
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      {% else %}
+      <!-- Out of stock notice -->
+      <div class="flex items-center gap-4 p-5 rounded-2xl"
+           style="background:#fffbeb;border:1.5px solid #fde68a;">
+        <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full"
+             style="background:#fef3c7;">
+          <span data-icon="clock-history" class="ui-icon" style="color:#d97706;font-size:1.2rem;"></span>
+        </div>
+        <div>
+          <div class="font-extrabold text-sm" style="color:#92400e;">Currently unavailable</div>
+          <div class="text-xs mt-1" style="color:#b45309;">Check back soon for restocking updates.</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Trust chips -->
+      <div class="flex flex-wrap gap-2 mt-5 pt-5" style="border-top:1.5px solid var(--border);">
+        <span class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+              style="background:var(--bg);color:var(--text-muted);border:1px solid var(--border);">
+          <span data-icon="geo-alt-fill" class="ui-icon" style="color:var(--primary);"></span>Campus pickup only
+        </span>
+      </div>
+
+    </div><!-- /info panel -->
+  </div><!-- /split card -->
+
+  {% if product.image %}
+  <div id="productPreviewModal" class="product-preview-modal" role="dialog" aria-modal="true" aria-labelledby="productPreviewTitle">
+    <div class="product-preview-dialog">
+      <div class="product-preview-head">
+        <h2 id="productPreviewTitle" class="product-preview-title">{{ product.name }}</h2>
+        <button type="button" class="product-preview-close" onclick="closeProductPreview()" aria-label="Close image preview">
+          <span data-icon="x" class="ui-icon"></span>
+        </button>
+      </div>
+      <div class="product-preview-image-wrap">
+        <img id="productPreviewImage" src="{{ product.image.url }}" alt="{{ product.name }}">
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Related Products -->
+  {% if related %}
+  <div class="mt-14 pt-8" style="border-top:1.5px solid var(--border);" data-fade>
+    <div class="flex items-center justify-between mb-5">
+      <h4 class="font-black text-xl mb-0" style="letter-spacing:-.3px;">You Might Also Like</h4>
+      <a href="{% url 'product_list' %}" class="text-sm font-bold" style="color:var(--primary);">
+        Browse all &rarr;
+      </a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      {% for rp in related %}
+      <div>{% include 'store/partials/product_card.html' with product=rp %}</div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const ACTIVE_BG     = 'var(--primary)';
+  const ACTIVE_BORDER = 'var(--primary)';
+  const IDLE_BG       = 'var(--surface)';
+  const IDLE_BORDER   = 'var(--border-strong)';
+
+  /* ── Size chip initialisation ───────────────────────────── */
+  const chips = Array.from(document.querySelectorAll('.size-chip'));
+  chips.forEach((chip, i) => {
+    applyChipStyle(chip, i === 0);
+  });
+
+  function applyChipStyle(chip, active) {
+    chip.style.background   = active ? ACTIVE_BG   : IDLE_BG;
+    chip.style.border        = `2px solid ${active ? ACTIVE_BORDER : IDLE_BORDER}`;
+    chip.style.color         = active ? '#fff'      : 'var(--text)';
+    const sub = chip.querySelector('.size-chip-sub');
+    if (sub) sub.style.color = active ? 'rgba(255,255,255,.65)' : 'var(--text-muted)';
+  }
+
+  window.selectSize = function (btn) {
+    chips.forEach(b => applyChipStyle(b, false));
+    applyChipStyle(btn, true);
+    const inp = document.getElementById('variantInput');
+    if (inp) inp.value = btn.dataset.variant;
+    update();
+  };
+
+  /* ── Live price / stock / subtotal update ───────────────── */
+  const variantInput = document.getElementById('variantInput');
+  const priceEl      = document.getElementById('livePrice');
+  const noteEl       = document.getElementById('priceNote');
+  const stockNote    = document.getElementById('stockNote');
+  const subtotalEl   = document.getElementById('subtotalDisplay');
+  const qtyInput     = document.getElementById('qtyInput');
+  const basePrice    = parseFloat('{{ variants.0.get_price|default:0 }}');
+
+  function fmt(n) {
+    return '₱' + parseFloat(n).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function update() {
+    const activeChip = document.querySelector('.size-chip[style*="var(--primary)"]');
+    if (!activeChip || !qtyInput) return;
+    const price = parseFloat(activeChip.dataset.price);
+    const stock = parseInt(activeChip.dataset.stock);
+    const qty   = parseInt(qtyInput.value) || 1;
+    if (priceEl)    priceEl.textContent    = fmt(price);
+    if (noteEl)     noteEl.style.display   = Math.abs(price - basePrice) > 0.001 ? 'inline' : 'none';
+    if (stockNote)  stockNote.textContent  = stock + ' available';
+    if (subtotalEl) subtotalEl.textContent = fmt(price * qty);
+    if (qty > stock) qtyInput.value = stock;
+    qtyInput.max = stock;
+  }
+
+  if (qtyInput) {
+    qtyInput.addEventListener('input', update);
+    document.getElementById('qtyMinus')?.addEventListener('click', () => {
+      if (parseInt(qtyInput.value) > 1) { qtyInput.value--; update(); }
+    });
+    document.getElementById('qtyPlus')?.addEventListener('click', () => {
+      const max = parseInt(qtyInput.max) || 99;
+      if (parseInt(qtyInput.value) < max) { qtyInput.value++; update(); }
+    });
+    update();
+  }
+})();
+</script>
+
+<script>
+function switchImage(btn, src) {
+  const main = document.getElementById('gallery-main');
+  if (!main) return;
+  main.style.opacity = '0';
+  setTimeout(function () { main.src = src; main.style.opacity = '1'; }, 180);
+  document.querySelectorAll('.gallery-thumb').forEach(t => {
+    t.classList.remove('active');
+  });
+  btn.classList.add('active');
+}
+
+function openProductPreview(src) {
+  const modal = document.getElementById('productPreviewModal');
+  const image = document.getElementById('productPreviewImage');
+  if (!modal || !image) return;
+  image.src = src;
+  modal.classList.add('show');
+}
+
+function closeProductPreview() {
+  document.getElementById('productPreviewModal')?.classList.remove('show');
+}
+
+document.getElementById('productPreviewModal')?.addEventListener('click', function(event) {
+  if (event.target === this) closeProductPreview();
+});
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') closeProductPreview();
+});
+</script>
+{% endblock %}
+

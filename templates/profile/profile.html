@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-form input[type="file"] {
+    display: block;
+    width: 100%;
+    border: 1.5px solid #d8dee9;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: .86rem;
+    padding: .45rem .65rem;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .profile-form input[type="file"]:hover {
+    border-color: #13284e;
+    background: #fff;
+  }
+  .profile-form input[type="file"]:focus {
+    outline: none;
+    border-color: #13284e;
+    box-shadow: 0 0 0 3px rgba(19,40,78,.12);
+  }
+  .profile-form input[type="file"]::file-selector-button {
+    border: 0;
+    border-radius: 10px;
+    background: #13284e;
+    color: #fff;
+    font-weight: 700;
+    font-size: .82rem;
+    padding: .55rem .85rem;
+    margin-right: .85rem;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .profile-form input[type="file"]:hover::file-selector-button {
+    background: #234080;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1><span data-icon="person-circle" class="ui-icon mr-2"></span>My Profile</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Profile</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4" style="max-width:960px;">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-4">
+      <!-- Avatar card -->
+      <div class="bg-white rounded-2xl shadow p-4 mb-3 text-center">
+        {% if request.user.profile.avatar %}
+          <img src="{{ request.user.profile.avatar.url }}"
+               class="rounded-full mx-auto block mb-3"
+               style="width:96px;height:96px;object-fit:cover;border:3px solid var(--primary);box-shadow:0 0 0 4px var(--primary-soft);"
+               alt="avatar">
+        {% else %}
+          <div class="profile-avatar-ring mx-auto">
+            <div class="inner"><span data-icon="person-fill" class="ui-icon"></span></div>
+          </div>
+        {% endif %}
+        <h5 class="fw-800 mb-0">{{ request.user.get_full_name|default:request.user.username }}</h5>
+        <p class="text-muted-500 text-sm mb-0 mt-1">{{ request.user.email }}</p>
+        {% if request.user.profile.student_id %}
+          <p class="text-muted-500 text-sm mb-0 mt-1">Student ID: {{ request.user.profile.student_id }}</p>
+        {% endif %}
+        {% if request.user.profile.school_level %}
+          <p class="text-muted-500 text-sm mb-0 mt-1">{{ request.user.profile.school_level.name }}</p>
+        {% endif %}
+        <div class="mt-3 pt-3 border-t border-navy-100">
+          <div class="flex justify-center gap-3 text-muted-500" style="font-size:.8rem;">
+            <div class="text-center">
+              <div class="fw-700 text-navy-700" style="font-size:1.1rem;">{{ orders|length }}</div>
+              <div>Orders</div>
+            </div>
+            <div class="w-px bg-navy-100 self-stretch"></div>
+            <div class="text-center">
+              <div class="fw-700 text-navy-700" style="font-size:1.1rem;">{{ request.user.date_joined|date:"Y" }}</div>
+              <div>Joined</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+          <div class="flex justify-between items-center">
+            <h6 class="fw-700 mb-0">Recent Orders</h6>
+            <a href="{% url 'order_list' %}" class="text-sm text-primary fw-600">View All</a>
+          </div>
+        </div>
+        <div class="p-3">
+          {% if orders %}
+            {% for order in orders %}
+            <a href="{% url 'order_detail' order.pk %}" class="flex justify-between items-center p-2 rounded-xl no-underline text-navy-700 mb-1"
+               style="transition:background .15s;" onmouseover="this.style.background='var(--primary-soft)'" onmouseout="this.style.background='transparent'">
+              <div>
+                <div class="text-sm fw-700">Order #{{ order.pk }}</div>
+                <div class="x-small text-muted-500">{{ order.created_at|date:"M d, Y" }}</div>
+              </div>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold
+                {% if order.status == 'pending' %}bg-warn-100 text-warn-700
+                {% elif order.status == 'confirmed' %}bg-info-100 text-info-700
+                {% elif order.status == 'processing' %}bg-violet-100 text-violet-700
+                {% elif order.status == 'ready' %}bg-ok-100 text-ok-700
+                {% elif order.status == 'completed' %}bg-muted-100 text-muted-600
+                {% else %}bg-danger-100 text-danger-700{% endif %}" style="font-size:.72rem;">{{ order.get_status_display }}</span>
+            </a>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted-500 text-sm text-center py-2 mb-0">No orders yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Form -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+          <h6 class="fw-700 mb-0"><span data-icon="pencil-square" class="ui-icon mr-2 text-primary"></span>Account Information</h6>
+        </div>
+        <div class="p-4">
+          {% if messages %}
+            {% for message in messages %}
+            <div class="flex items-center justify-between gap-2 p-3 rounded-xl border text-sm mb-4
+              {% if 'success' in message.tags %}bg-ok-50 border-ok-100 text-ok-700
+              {% elif 'error' in message.tags %}bg-danger-50 border-danger-200 text-danger-700
+              {% elif 'warning' in message.tags %}bg-warn-50 border-warn-200 text-warn-700
+              {% else %}bg-info-50 border-info-200 text-info-700{% endif %}" role="alert">
+              <span>{{ message }}</span>
+              <button type="button" onclick="this.parentElement.remove()" class="ml-auto text-current opacity-60 hover:opacity-100 flex-shrink-0" aria-label="Close">
+                <span data-icon="x-lg" class="ui-icon"></span>
+              </button>
+            </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="POST" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="form-label fw-600">First Name</label>
+                {{ user_form.first_name }}
+              </div>
+              <div>
+                <label class="form-label fw-600">Last Name</label>
+                {{ user_form.last_name }}
+              </div>
+              <div class="md:col-span-2">
+                <label class="form-label fw-600">Email Address</label>
+                {{ user_form.email }}
+              </div>
+              <div>
+                <label class="form-label fw-600">Phone Number</label>
+                {{ profile_form.phone }}
+              </div>
+              <div>
+                <label class="form-label fw-600">School Level</label>
+                {{ profile_form.school_level }}
+              </div>
+              <div>
+                <label class="form-label fw-600">Profile Picture</label>
+                {{ profile_form.avatar }}
+                {% if request.user.profile.avatar %}
+                  <div class="mt-2 flex items-center gap-2">
+                    <img src="{{ request.user.profile.avatar.url }}" class="rounded-full"
+                         style="width:36px;height:36px;object-fit:cover;" alt="current avatar">
+                    <span class="x-small text-muted-500">Current photo</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="mt-4 pt-2 border-t border-navy-100 flex justify-end">
+              <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-navy-700 text-white text-sm font-semibold hover:bg-navy-600 transition-colors border-0 shadow-lg"
+                      style="box-shadow:0 12px 28px rgba(19,40,78,.18);">
+                <span data-icon="check-lg" class="ui-icon"></span>Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+

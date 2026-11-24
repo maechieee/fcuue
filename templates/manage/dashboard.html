@@ -1,0 +1,266 @@
+{% extends 'manage/base_manage.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_name %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="admin-page-header">
+  <div>
+    <h2 class="admin-page-title">Dashboard</h2>
+    <p class="admin-page-subtitle">Welcome back, {{ request.user.get_full_name|default:request.user.username }}</p>
+  </div>
+  {% if is_manager %}
+  <a href="{% url 'manage_product_add' %}" class="btn-admin-primary">
+    <span data-icon="plus-lg" class="ui-icon"></span>Add Product
+  </a>
+  {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+
+  <div class="stat-card stat-blue">
+    <div class="stat-card-inner">
+      <div>
+        <div class="stat-value">{{ total_orders }}</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-trend stat-trend-info"><span data-icon="receipt" class="ui-icon"></span> All time</div>
+      </div>
+      <div class="stat-icon-wrap"><span data-icon="receipt" class="ui-icon"></span></div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-yellow">
+    <div class="stat-card-inner">
+      <div>
+        <div class="stat-value">{{ pending_orders }}</div>
+        <div class="stat-label">Pending Orders</div>
+        <div class="stat-trend stat-trend-up"><span data-icon="clock" class="ui-icon"></span> Needs action</div>
+      </div>
+      <div class="stat-icon-wrap"><span data-icon="hourglass-split" class="ui-icon"></span></div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-green">
+    <div class="stat-card-inner">
+      <div>
+        <div class="stat-value">{{ ready_orders }}</div>
+        <div class="stat-label">Ready for Pickup</div>
+        <div class="stat-trend stat-trend-up"><span data-icon="bag-check" class="ui-icon"></span> For claiming</div>
+      </div>
+      <div class="stat-icon-wrap"><span data-icon="bag-check" class="ui-icon"></span></div>
+    </div>
+  </div>
+
+  <div class="stat-card stat-purple">
+    <div class="stat-card-inner">
+      <div>
+        <div class="stat-value">{{ completed_orders }}</div>
+        <div class="stat-label">Claimed Orders</div>
+        <div class="stat-trend stat-trend-info"><span data-icon="check-all" class="ui-icon"></span> Picked up</div>
+      </div>
+      <div class="stat-icon-wrap"><span data-icon="check-all" class="ui-icon"></span></div>
+    </div>
+  </div>
+
+</div>
+
+{% if is_manager %}
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-5 dashboard-insights">
+  <div class="xl:col-span-3 dashboard-stack">
+    <div class="admin-table-wrap">
+      <div class="admin-table-head">
+        <div class="admin-table-title"><span data-icon="graph-up" class="ui-icon"></span>Reports</div>
+      </div>
+      <div class="dashboard-report-grid">
+        <div class="dashboard-report-main">
+          <div class="dashboard-report-label">Revenue</div>
+          <div class="dashboard-report-value">&#8369;{{ total_revenue|floatformat:0 }}</div>
+          <div class="dashboard-report-note">From claimed orders</div>
+        </div>
+        <div class="dashboard-mini-metric">
+          <span data-icon="box" class="ui-icon"></span>
+          <div>
+            <div class="dashboard-mini-value">{{ total_products }}</div>
+            <div class="dashboard-mini-label">Uniform Items</div>
+          </div>
+        </div>
+        <div class="dashboard-mini-metric">
+          <span data-icon="people" class="ui-icon"></span>
+          <div>
+            <div class="dashboard-mini-value">{{ total_staff }}</div>
+            <div class="dashboard-mini-label">Staff Accounts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <div class="admin-table-head">
+        <div>
+          <div class="admin-table-title"><span data-icon="diagram-3" class="ui-icon"></span>Units Ordered by Level</div>
+          <div class="admin-table-caption">Approved and active order item quantities grouped by school level.</div>
+        </div>
+      </div>
+      <div class="dashboard-level-list compact">
+      {% for row in school_level_sales %}
+      <div class="dashboard-level-row">
+        <div>
+          <div class="dashboard-level-name">{{ row.variant__product__category__name }}</div>
+          <div class="dashboard-level-sub">Uniform pieces ordered</div>
+        </div>
+        <span class="dashboard-level-count">{{ row.units }}</span>
+      </div>
+      {% empty %}
+      <div style="padding:1.5rem;color:#9ca3af;font-size:.82rem;">No approved orders yet.</div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="xl:col-span-5">
+    <div class="admin-table-wrap">
+      <div class="admin-table-head">
+        <div class="admin-table-title"><span data-icon="bar-chart" class="ui-icon"></span>Orders by Status</div>
+      </div>
+      {% for row in status_counts %}
+      <div class="flex items-center justify-between px-4 py-2.5 border-b border-navy-50">
+        <span class="font-semibold text-sm" style="color:#13284e;">{{ row.status|title }}</span>
+        <span class="status-badge badge-confirmed">{{ row.count }}</span>
+      </div>
+      {% empty %}
+      <div style="padding:1.5rem;color:#9ca3af;font-size:.82rem;">No orders yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="xl:col-span-4">
+    <div class="admin-table-wrap dashboard-closure-card">
+      <div class="admin-table-head">
+        <div>
+          <div class="admin-table-title"><span data-icon="calendar-x" class="ui-icon"></span>Store Closures</div>
+          <div class="admin-table-caption">Upcoming active dates when students cannot choose pickup.</div>
+        </div>
+      </div>
+      <div class="dashboard-closure-list">
+      {% for closure in store_closures %}
+      <div class="dashboard-closure-row">
+        <div class="dashboard-closure-date">
+          {% if closure.start_date == closure.end_date %}
+            {{ closure.start_date|date:"M d" }}
+          {% else %}
+            {{ closure.start_date|date:"M d" }}-{{ closure.end_date|date:"M d" }}
+          {% endif %}
+        </div>
+        <div>
+          <div class="dashboard-level-name">{{ closure.reason }}</div>
+          <div class="dashboard-level-sub">
+            {% if closure.start_date == closure.end_date %}
+              {{ closure.start_date|date:"F d, Y" }}
+            {% else %}
+              {{ closure.start_date|date:"F d, Y" }} to {{ closure.end_date|date:"F d, Y" }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="padding:1.5rem;color:#9ca3af;font-size:.82rem;">No upcoming active closure dates.</div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Bottom grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-4 dashboard-bottom-grid">
+
+  <!-- Recent Orders table -->
+  <div class="xl:col-span-8">
+    <div class="admin-table-wrap">
+      <div class="admin-table-head">
+        <div class="admin-table-title">
+          <span data-icon="receipt" class="ui-icon"></span>Recent Orders
+        </div>
+        <a href="{% url 'manage_orders' %}" class="btn-admin-outline">
+          View All <span data-icon="arrow-right" class="ui-icon"></span>
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in recent_orders %}
+            <tr>
+              <td>
+                <a href="{% url 'manage_order_detail' order.pk %}" class="font-bold" style="color:#13284e;">#{{ order.pk }}</a>
+              </td>
+              <td class="font-semibold">{{ order.user.get_full_name|default:order.user.username }}</td>
+              <td class="font-bold">&#8369;{{ order.subtotal }}</td>
+              <td>
+                <span class="status-badge
+                  {% if order.status == 'pending' %}badge-pending
+                  {% elif order.status == 'confirmed' %}badge-confirmed
+                  {% elif order.status == 'processing' %}badge-processing
+                  {% elif order.status == 'ready' %}badge-ready
+                  {% elif order.status == 'completed' %}badge-completed
+                  {% else %}badge-cancelled{% endif %}">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+              <td style="color:#9ca3af;">{{ order.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:2rem;">No orders yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Alerts -->
+  <div class="xl:col-span-4">
+    <div class="admin-table-wrap" style="height:100%;">
+      <div class="admin-table-head">
+        <div class="admin-table-title">
+          <span data-icon="exclamation-triangle" class="ui-icon" style="color:#d97706;"></span>Stock Alerts
+        </div>
+      </div>
+      {% for variant in low_stock %}
+      <div class="flex items-center justify-between px-4 py-2.5 border-b border-navy-50">
+        <div>
+          <div class="font-semibold text-sm" style="color:#13284e;">{{ variant.product.name }}</div>
+          <div style="font-size:.72rem;color:#9ca3af;">Size {{ variant.size.code }}</div>
+        </div>
+        <span class="status-badge badge-pending">{{ variant.stock }} left</span>
+      </div>
+      {% endfor %}
+      {% for variant in out_of_stock %}
+      <div class="flex items-center justify-between px-4 py-2.5 border-b border-navy-50">
+        <div>
+          <div class="font-semibold text-sm" style="color:#13284e;">{{ variant.product.name }}</div>
+          <div style="font-size:.72rem;color:#9ca3af;">Size {{ variant.size.code }}</div>
+        </div>
+        <span class="status-badge badge-cancelled">Out of Stock</span>
+      </div>
+      {% endfor %}
+      {% if not low_stock and not out_of_stock %}
+      <div style="text-align:center;padding:2.5rem 1rem;color:#9ca3af;font-size:.82rem;">
+        <span data-icon="check-circle-fill" class="ui-icon" style="font-size:1.5rem;color:#059669;display:block;margin-bottom:.5rem;"></span>
+        All products are well-stocked!
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+

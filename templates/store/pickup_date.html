@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% block title %}Choose Pickup Date{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+/* ── Flatpickr inline calendar overrides ───────────────────────── */
+.flatpickr-calendar.inline {
+  width: 100% !important;
+  max-width: 100%;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Month header */
+.flatpickr-months {
+  background: #13284e;
+  border-radius: .75rem .75rem 0 0;
+  padding: .5rem 0;
+}
+.flatpickr-months .flatpickr-month { background: transparent; color: #fff; height: 40px; }
+.flatpickr-current-month { font-size: .95rem; font-weight: 700; color: #fff; }
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: transparent; color: #fff; font-weight: 700;
+  border: none; appearance: none; font-size: .95rem;
+}
+.flatpickr-current-month input.cur-year { color: #fff; font-weight: 700; font-size: .95rem; }
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  top: 50%; transform: translateY(-50%); fill: rgba(255,255,255,.8); color: rgba(255,255,255,.8);
+  padding: 4px 10px;
+}
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover { background: rgba(255,255,255,.15); border-radius: 6px; fill: #fff; }
+
+/* Weekday row */
+.flatpickr-weekdays { background: #1a3566; padding: .35rem 0; }
+span.flatpickr-weekday {
+  background: transparent; color: rgba(255,255,255,.65);
+  font-size: .7rem; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+}
+
+/* Day grid */
+.flatpickr-innerContainer { background: #fff; border-radius: 0 0 .75rem .75rem; }
+.dayContainer { width: 100%; min-width: 100%; max-width: 100%; }
+.flatpickr-days { width: 100%; }
+.flatpickr-day {
+  border-radius: .5rem;
+  font-size: .82rem; font-weight: 600; color: #374151;
+  height: 38px; line-height: 38px;
+  margin: 1px;
+  flex-basis: calc(14.28% - 2px);
+  max-width: calc(14.28% - 2px);
+}
+.flatpickr-day:hover:not(.flatpickr-disabled):not(.selected) {
+  background: #f0f4ff;
+  border-color: #c7d2fe;
+  color: #13284e;
+}
+
+/* Today */
+.flatpickr-day.today:not(.selected) {
+  border: 2px solid #13284e;
+  color: #13284e;
+  font-weight: 800;
+}
+.flatpickr-day.today::after { display: none; }
+
+/* Selected */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: #13284e;
+  border-color: #13284e;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(19,40,78,.35);
+}
+
+/* Disabled / store closed */
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+  background: #fef2f2 !important;
+  color: #fca5a5 !important;
+  border-color: #fee2e2 !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Past dates */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay { color: #d1d5db; }
+
+/* ── Legend & status box ────────────────────────────────────────── */
+.cal-legend { display: flex; flex-wrap: wrap; gap: .6rem .9rem; margin-top: .85rem; }
+.cal-legend-item { display: flex; align-items: center; gap: .45rem; font-size: .75rem; color: #6b7280; font-weight: 500; }
+.cal-legend-dot { width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; }
+
+.cal-selected-box {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .75rem 1rem; margin-top: .9rem;
+  background: #f0f4ff; border: 1.5px solid #c7d2fe;
+  border-radius: .75rem; font-size: .875rem; font-weight: 700; color: #13284e;
+}
+.cal-closed-box {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .65rem .9rem; margin-top: .75rem;
+  background: #fef2f2; border: 1.5px solid #fecaca;
+  border-radius: .75rem; font-size: .8rem; font-weight: 600; color: #b91c1c;
+}
+
+.pickup-actions {
+  display: flex;
+  gap: .7rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.pickup-save-btn,
+.pickup-cancel-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: .875rem;
+  padding: .72rem 1rem;
+  font-size: .875rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.pickup-save-btn {
+  color: #fff;
+  border: none;
+  background: linear-gradient(135deg,#13284e,#234080);
+  box-shadow: 0 6px 18px rgba(19,40,78,.28);
+  cursor: pointer;
+}
+.pickup-save-btn:hover:not(:disabled) {
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(19,40,78,.36);
+}
+.pickup-save-btn:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.pickup-cancel-btn {
+  color: #4b5563;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+}
+.pickup-cancel-btn:hover {
+  color: #13284e;
+  background: #f8fafc;
+  border-color: #d1d5db;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Choose Pickup Date</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'order_list' %}">My Orders</a></li>
+        <li class="breadcrumb-item active">Order #{{ order.pk }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5" style="max-width:520px;">
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+    <!-- Header -->
+    <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+      <h6 class="fw-700 mb-0">
+        <span data-icon="calendar-check" class="ui-icon mr-2 text-primary"></span>
+        Pickup Schedule &mdash; Order #{{ order.pk }}
+      </h6>
+    </div>
+
+    <div class="p-4">
+
+      <!-- Form-level error -->
+      {% if form.pickup_date.errors %}
+      <div class="cal-closed-box mb-3">
+        <span data-icon="exclamation-circle-fill" class="ui-icon" style="font-size:1rem;flex-shrink:0;"></span>
+        <span>{{ form.pickup_date.errors.0 }}</span>
+      </div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+        <!-- Hidden input submitted with the form -->
+        <input type="hidden" name="pickup_date" id="id_pickup_date" value="{{ form.pickup_date.value|default:'' }}">
+
+        <!-- Inline calendar renders here -->
+        <div style="border:1.5px solid #e5e7eb;border-radius:.875rem;overflow:hidden;">
+          <div id="pickup-calendar"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="cal-legend">
+          <div class="cal-legend-item">
+            <div class="cal-legend-dot" style="background:#13284e;"></div>Selected
+          </div>
+          <div class="cal-legend-item">
+            <div class="cal-legend-dot" style="background:#fef2f2;border:1.5px solid #fca5a5;"></div>Closed dates
+          </div>
+          <div class="cal-legend-item">
+            <div class="cal-legend-dot" style="background:#fff;border:2px solid #13284e;"></div>Today
+          </div>
+        </div>
+
+        <!-- Selected date confirmation -->
+        <div id="date-display" class="cal-selected-box" style="display:none;">
+          <span data-icon="calendar-check-fill" class="ui-icon" style="color:#13284e;font-size:1.1rem;flex-shrink:0;"></span>
+          <span id="date-display-text"></span>
+        </div>
+
+        <!-- Closure hover notice -->
+        <div id="closure-notice" class="cal-closed-box" style="display:none;">
+          <span data-icon="x-circle-fill" class="ui-icon" style="font-size:1rem;flex-shrink:0;"></span>
+          <span id="closure-notice-text"></span>
+        </div>
+
+        <!-- Actions -->
+        <div class="pickup-actions">
+          <button type="submit" id="submit-btn" class="pickup-save-btn" disabled>
+            <span data-icon="calendar-check-fill" class="ui-icon mr-2"></span>Save Pickup Date
+          </button>
+          <a href="{% url 'order_detail' order.pk %}"
+             class="pickup-cancel-btn">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+(function () {
+  const closedRanges = {{ closed_ranges_json|safe }};
+  const hiddenInput  = document.getElementById('id_pickup_date');
+  const display      = document.getElementById('date-display');
+  const displayText  = document.getElementById('date-display-text');
+  const submitBtn    = document.getElementById('submit-btn');
+  const notice       = document.getElementById('closure-notice');
+  const noticeText   = document.getElementById('closure-notice-text');
+
+  const existing = hiddenInput.value;
+
+  const fp = flatpickr('#pickup-calendar', {
+    inline: true,
+    minDate: 'today',
+    defaultDate: existing || null,
+    disable: [
+      function (date) {
+        return date.getDay() === 0 || date.getDay() === 6;
+      },
+      ...closedRanges.map(r => ({ from: r.from, to: r.to })),
+    ],
+
+    onReady(_, __, instance) {
+      instance.calendarContainer.addEventListener('mouseover', onDayHover);
+      instance.calendarContainer.addEventListener('mouseout', function (e) {
+        if (!e.target.closest('.flatpickr-disabled')) {
+          notice.style.display = 'none';
+        }
+      });
+    },
+
+    onChange(selectedDates, dateStr) {
+      if (!selectedDates.length) return;
+      hiddenInput.value = dateStr;
+      displayText.textContent = selectedDates[0].toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      });
+      display.style.display = 'flex';
+      submitBtn.removeAttribute('disabled');
+      submitBtn.style.opacity = '';
+      submitBtn.style.cursor  = '';
+      submitBtn.style.pointerEvents = '';
+      notice.style.display = 'none';
+    },
+  });
+
+  // Pre-fill if editing an existing date
+  if (existing) {
+    const d = new Date(existing + 'T00:00:00');
+    displayText.textContent = d.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+    display.style.display = 'flex';
+    submitBtn.removeAttribute('disabled');
+    submitBtn.style.opacity = '';
+    submitBtn.style.cursor  = '';
+    submitBtn.style.pointerEvents = '';
+  }
+
+  function onDayHover(e) {
+    const dayEl = e.target.closest('.flatpickr-day.flatpickr-disabled');
+    if (!dayEl) return;
+
+    const hovered = dayEl.dateObj || new Date(dayEl.getAttribute('aria-label'));
+    if (!hovered || Number.isNaN(hovered.getTime())) return;
+
+    if (hovered.getDay() === 0 || hovered.getDay() === 6) {
+      noticeText.textContent = 'The school store is closed on weekends. Please choose a weekday.';
+      notice.style.display = 'flex';
+      return;
+    }
+
+    for (const r of closedRanges) {
+      const from = new Date(r.from + 'T00:00:00');
+      const to   = new Date(r.to   + 'T00:00:00');
+      if (hovered >= from && hovered <= to) {
+        const rangeStr = r.from === r.to
+          ? ''
+          : ' (' + fmtDate(from) + '–' + fmtDate(to) + ')';
+        noticeText.textContent = 'Store closed: ' + r.reason + rangeStr;
+        notice.style.display = 'flex';
+        return;
+      }
+    }
+  }
+
+  function fmtDate(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+})();
+</script>
+{% endblock %}
+

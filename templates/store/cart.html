@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}My Cart{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1><span data-icon="bag" class="ui-icon mr-2"></span>My Cart</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Cart</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4" data-fade>
+  {% if items %}
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- Cart Items -->
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-2xl shadow overflow-hidden">
+        {% for item in items %}
+        <div class="cart-row">
+          <!-- Image -->
+          <a href="{% url 'product_detail' item.variant.product.slug %}" class="cart-img" aria-label="View {{ item.variant.product.name }}">
+            {% if item.variant.product.image %}
+              <img src="{{ item.variant.product.image.url }}" alt="{{ item.variant.product.name }}">
+            {% else %}
+              <span data-icon="image" class="ui-icon"></span>
+            {% endif %}
+          </a>
+
+          <!-- Info -->
+          <div class="min-w-0">
+            <a href="{% url 'product_detail' item.variant.product.slug %}" class="font-bold text-navy-700 text-decoration-none block truncate">
+              {{ item.variant.product.name }}
+            </a>
+            <div class="text-muted-500 text-sm mt-1">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" style="background:var(--bg);color:var(--text-muted);">Size {{ item.variant.size.code }}</span>
+              <span class="ml-1 text-muted-500 x-small">{{ item.variant.stock }} in stock</span>
+            </div>
+            <div class="font-bold text-primary mt-1">&#8369;{{ item.variant.get_price }}</div>
+          </div>
+
+          <!-- Qty stepper -->
+          <form method="POST" action="{% url 'update_cart' item.id %}" class="cart-qty-form">
+            {% csrf_token %}
+            <div class="qty-stepper">
+              <button type="button" onclick="stepQty(this,-1)"><span data-icon="dash" class="ui-icon"></span></button>
+              <input type="number" class="qty-field" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.variant.stock }}" onchange="submitQtyChange(this)">
+              <button type="button" onclick="stepQty(this,1)"><span data-icon="plus" class="ui-icon"></span></button>
+            </div>
+          </form>
+
+          <!-- Subtotal -->
+          <div class="font-extrabold text-navy-700 text-right" style="min-width:80px;">
+            &#8369;{{ item.get_subtotal }}
+          </div>
+
+          <!-- Remove -->
+          <form method="POST" action="{% url 'remove_from_cart' item.id %}">
+            {% csrf_token %}
+            <button type="button" class="cart-remove-btn"
+                    onclick="openCartRemoveModal(this.form, '{{ item.variant.product.name|escapejs }}')"
+                    aria-label="Remove {{ item.variant.product.name }}">
+              <span data-icon="trash" class="ui-icon"></span>
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+
+      <a href="{% url 'product_list' %}" class="inline-flex items-center gap-1 px-4 py-2 border border-navy-700 text-navy-700 rounded-xl text-sm font-semibold hover:bg-navy-50 transition-colors mt-3">
+        <span data-icon="arrow-left" class="ui-icon mr-2"></span>Continue Shopping
+      </a>
+    </div>
+
+    <!-- Summary -->
+    <div class="lg:col-span-4">
+      <div class="cart-summary-card">
+        <h5 class="font-extrabold mb-4" style="letter-spacing:-.3px;">Order Summary</h5>
+
+        <div class="flex justify-between mb-2">
+          <span class="text-muted-500">Items ({{ cart.get_item_count }})</span>
+          <span class="font-semibold">&#8369;{{ cart.get_total }}</span>
+        </div>
+        
+
+        <div class="flex justify-between items-center p-3 rounded-xl mb-4" style="background:var(--primary-soft);border:1.5px solid rgba(19,40,78,.15);">
+          <span class="font-bold">Total</span>
+          <span class="font-black text-primary text-2xl">&#8369;{{ cart.get_total }}</span>
+        </div>
+
+        <a href="{% url 'checkout' %}" class="cart-checkout-btn">
+          <span data-icon="bag-check" class="ui-icon"></span>Checkout
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-state-icon"><span data-icon="bag" class="ui-icon"></span></div>
+    <h4>Your cart is empty</h4>
+    <p>Browse our catalog and add items to your cart to get started.</p>
+    <a href="{% url 'product_list' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors hover:bg-navy-600">
+      <span data-icon="bag-plus" class="ui-icon"></span>Start Shopping
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<div id="cartRemoveModal" class="cart-remove-modal" aria-hidden="true">
+  <div class="cart-remove-dialog" role="dialog" aria-modal="true" aria-labelledby="cartRemoveTitle">
+    <div class="cart-remove-icon">
+      <span data-icon="trash" class="ui-icon"></span>
+    </div>
+    <h5 id="cartRemoveTitle">Remove this item?</h5>
+    <p id="cartRemoveText">This item will be removed from your cart.</p>
+    <div class="cart-remove-actions">
+      <button type="button" class="cart-modal-secondary" onclick="closeCartRemoveModal()">Keep Item</button>
+      <button type="button" class="cart-modal-danger" onclick="submitCartRemove()">Remove Item</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let pendingRemoveForm = null;
+
+function stepQty(btn, delta) {
+  const input = btn.closest('.qty-stepper').querySelector('.qty-field');
+  const current = parseInt(input.value || '0', 10);
+  const max = parseInt(input.max || '99', 10);
+  const min = parseInt(input.min || '1', 10);
+  const val = Math.max(min, Math.min(max, current + delta));
+  if (val === current) return;
+  input.value = val;
+  submitQtyChange(input);
+}
+
+function submitQtyChange(input) {
+  const max = parseInt(input.max || '99', 10);
+  const min = parseInt(input.min || '1', 10);
+  const value = Math.max(min, Math.min(max, parseInt(input.value || min, 10)));
+  input.value = value;
+  input.closest('form').submit();
+}
+
+function openCartRemoveModal(form, name) {
+  pendingRemoveForm = form;
+  const modal = document.getElementById('cartRemoveModal');
+  const text = document.getElementById('cartRemoveText');
+  text.textContent = '"' + name + '" will be removed from your cart.';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCartRemoveModal() {
+  const modal = document.getElementById('cartRemoveModal');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  pendingRemoveForm = null;
+}
+
+function submitCartRemove() {
+  if (pendingRemoveForm) pendingRemoveForm.submit();
+}
+
+document.getElementById('cartRemoveModal')?.addEventListener('click', function (e) {
+  if (e.target === this) closeCartRemoveModal();
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closeCartRemoveModal();
+});
+</script>
+{% endblock %}
+

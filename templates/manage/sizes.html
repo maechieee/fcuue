@@ -1,0 +1,87 @@
+{% extends 'manage/base_manage.html' %}
+
+{% block title %}Sizes{% endblock %}
+{% block page_name %}Sizes{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h3 class="font-bold mb-0">Sizes</h3>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <div class="lg:col-span-7">
+    <div class="bg-white rounded-2xl shadow">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-muted-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-500">Code</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-500">Label</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase text-muted-500">Status</th>
+              <th class="px-4 py-3 text-right text-xs font-bold uppercase text-muted-500">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for size in sizes %}
+            <tr>
+              <td class="px-4 py-3 font-bold">{{ size.code }}</td>
+              <td class="px-4 py-3">{{ size.label }}</td>
+              <td class="px-4 py-3">
+                {% if size.is_active %}
+                  <span class="status-badge badge-available">Active</span>
+                {% else %}
+                  <span class="status-badge badge-hidden">Inactive</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-right">
+                <form method="POST" action="{% url 'manage_size_toggle' size.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-admin-ghost">
+                    {% if size.is_active %}Deactivate{% else %}Activate{% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted-500 py-3">No sizes yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="lg:col-span-5">
+    <div class="bg-white rounded-2xl shadow p-4">
+      <h5 class="font-bold mb-3">Add Size</h5>
+      {% if form.errors %}
+      <div class="flex items-center gap-2 px-3 py-2 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700 font-semibold mb-3">
+        <span data-icon="exclamation-circle-fill" class="ui-icon"></span> Please fix the errors below.
+      </div>
+      {% endif %}
+      <form method="POST">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-sm block mb-1">Code</label>
+            {{ form.code }}
+            {% if form.code.errors %}<div class="text-danger text-sm mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+          </div>
+          <div>
+            <label class="font-semibold text-sm block mb-1">Label</label>
+            {{ form.label }}
+            {% if form.label.errors %}<div class="text-danger text-sm mt-1">{{ form.label.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+        <label class="inline-flex items-center gap-2 mt-3 text-sm font-semibold" style="color:#13284e;">
+          {{ form.is_active }} Active
+        </label>
+        <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-navy-700 text-white rounded-xl text-sm font-semibold hover:bg-navy-600 transition-colors mt-4">
+          <span data-icon="plus-lg" class="ui-icon mr-2"></span>Add Size
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

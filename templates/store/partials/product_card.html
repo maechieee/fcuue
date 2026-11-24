@@ -1,0 +1,36 @@
+{% load static %}
+<a href="{% url 'product_detail' product.slug %}" class="product-card h-full" style="display:flex;flex-direction:column;">
+  <div class="product-img-wrap">
+    <span class="product-cat-badge">{% for cat in product.category.all %}{{ cat.name }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>
+
+    {% if product.image %}
+      <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+    {% else %}
+      <div class="product-img-placeholder"><span data-icon="image" class="ui-icon"></span></div>
+    {% endif %}
+
+    {% if not product.in_stock %}
+      <div class="out-of-stock-overlay"><span>Out of Stock</span></div>
+    {% endif %}
+
+    <span class="btn btn-sm btn-primary product-hover-btn px-3 font-bold">
+      <span data-icon="eye" class="ui-icon mr-1"></span>View Item
+    </span>
+  </div>
+
+  <div class="card-body flex flex-col" style="flex:1;">
+    <div class="product-title">{{ product.name }}</div>
+    <div class="flex justify-between items-center mt-auto pt-2">
+      <div>
+        {% if product.prices_vary %}
+          <span class="x-small text-muted-500">from</span>
+        {% endif %}
+        <span class="product-price">&#8369;{{ product.get_min_price }}</span>
+      </div>
+      {% if not product.in_stock %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted-100 text-muted-500 text-xs font-bold">Sold Out</span>
+      {% endif %}
+    </div>
+  </div>
+</a>
+

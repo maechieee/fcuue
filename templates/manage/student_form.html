@@ -1,0 +1,65 @@
+{% extends 'manage/base_manage.html' %}
+{% block title %}Edit Student{% endblock %}
+{% block page_name %}Edit Student{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+  <a href="{% url 'manage_students' %}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-navy-200 text-muted-500 rounded-lg text-xs font-semibold hover:bg-navy-50 transition-colors"><span data-icon="arrow-left" class="ui-icon"></span></a>
+  <h3 class="font-bold mb-0">Edit Student Account</h3>
+</div>
+
+<div class="admin-panel" style="max-width:840px;">
+  <form method="POST">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="font-semibold text-sm block mb-1">Student ID</label>
+        {{ form.student_id }}
+        {% if form.student_id.errors %}<div class="text-danger text-sm mt-1">{{ form.student_id.errors.0 }}</div>{% endif %}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div class="text-danger text-sm mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">First Name</label>
+        {{ form.first_name }}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">Last Name</label>
+        {{ form.last_name }}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">School Level</label>
+        {{ form.school_level }}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">Role</label>
+        {{ form.role }}
+      </div>
+      <div>
+        <label class="font-semibold text-sm block mb-1">Reset Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}<div class="text-danger text-sm mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <label class="inline-flex items-center gap-2 mt-4 text-sm font-semibold" style="color:#13284e;">
+      {{ form.is_active }} Account Status: Active
+    </label>
+
+    <div class="mt-3 text-sm text-muted-500">
+      Inactive accounts cannot log in or use the ordering system.
+    </div>
+
+    <div class="flex items-center gap-2 mt-5">
+      <button type="submit" class="btn-admin-primary">
+        <span data-icon="check-lg" class="ui-icon"></span>Save Account
+      </button>
+      <a href="{% url 'manage_students' %}" class="btn-admin-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

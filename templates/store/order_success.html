@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Order Placed!{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header" style="background:linear-gradient(135deg,#052e16 0%,#14532d 100%);">
+  <div class="container text-center">
+    <div class="success-ring mx-auto mb-3">
+      <span data-icon="check-lg" class="ui-icon" style="font-size:2.6rem;color:#16a34a;"></span>
+    </div>
+    <h1 style="color:#fff;font-size:1.75rem;">Order Placed!</h1>
+    <nav aria-label="breadcrumb" class="flex justify-center mt-2">
+      <ol class="breadcrumb" style="background:none;">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color:rgba(255,255,255,.7);">Home</a></li>
+        <li class="breadcrumb-item active" style="color:#fff;">Order Confirmed</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5" style="max-width:520px;">
+
+  <!-- Summary Card -->
+  <div class="bg-white rounded-2xl shadow overflow-hidden mb-4">
+    <div class="px-4 py-3 border-b border-navy-100" style="background:var(--surface-2);">
+      <h6 class="fw-700 mb-0"><span data-icon="receipt" class="ui-icon mr-2 text-primary"></span>Order Summary</h6>
+    </div>
+    <div class="p-4">
+      <div class="flex justify-between mb-3">
+        <span class="text-muted-500">Order Number</span>
+        <span class="fw-700">#{{ order.pk }}</span>
+      </div>
+      <div class="flex justify-between mb-3">
+        <span class="text-muted-500">Status</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold
+          {% if order.status == 'pending' %}bg-warn-100 text-warn-700
+          {% elif order.status == 'confirmed' %}bg-info-100 text-info-700
+          {% elif order.status == 'processing' %}bg-violet-100 text-violet-700
+          {% elif order.status == 'ready' %}bg-ok-100 text-ok-700
+          {% elif order.status == 'completed' %}bg-muted-100 text-muted-600
+          {% else %}bg-danger-100 text-danger-700{% endif %}">{{ order.get_status_display }}</span>
+      </div>
+      <div class="flex justify-between mb-3">
+        <span class="text-muted-500">Total Amount</span>
+        <span class="fw-800 text-primary fs-5">&#8369;{{ order.subtotal }}</span>
+      </div>
+      <div class="flex justify-between mb-3 gap-3">
+        <span class="text-muted-500">Contact Email</span>
+        <span class="fw-600 text-right">{{ order.contact_email }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-muted-500">Pickup Location</span>
+        <span class="fw-600">University Enterprise — Campus Ground Floor</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Banner -->
+  <div class="flex items-center gap-3 p-4 rounded-xl mb-4"
+       style="background:linear-gradient(135deg,var(--primary-soft),var(--accent-soft));border:1.5px solid rgba(19,40,78,.15);">
+    <div style="width:42px;height:42px;border-radius:10px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;flex-shrink:0;">
+      <span data-icon="bell-fill" class="ui-icon"></span>
+    </div>
+    <div>
+      <div class="fw-700" style="font-size:.9rem;">Your order is waiting for approval</div>
+      <div class="text-muted-500 text-sm mt-1">We'll notify <strong>{{ order.contact_email }}</strong> and your in-app notification inbox when your order updates.</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-3 flex-wrap">
+    <a href="{% url 'order_detail' order.pk %}" class="btn btn-gradient btn-lg fw-700 flex-1">
+      <span data-icon="box" class="ui-icon mr-2"></span>Track Order
+    </a>
+    <a href="{% url 'product_list' %}" class="inline-flex items-center gap-1 px-4 py-2 border border-navy-200 text-muted-600 rounded-xl text-sm font-semibold hover:bg-navy-50 transition-colors flex-1 justify-center fw-600" style="font-size:1rem;">
+      <span data-icon="bag" class="ui-icon mr-2"></span>Keep Shopping
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+

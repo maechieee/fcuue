@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Dark canvas shared with login ── */
+  @keyframes hOrbFloat {
+    0%   { transform: translate(0, 0) scale(1); }
+    40%  { transform: translate(22px, -32px) scale(1.04); }
+    100% { transform: translate(-16px, 18px) scale(.97); }
+  }
+
+  .home-dark-canvas {
+    background: #0d1e3a;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-dark-canvas::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(178,141,71,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(178,141,71,.028) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .home-dark-canvas > section { position: relative; z-index: 1; }
+
+  .h-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .h-orb-1 {
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, rgba(10,30,70,.7) 0%, transparent 68%);
+    top: -300px; left: -250px;
+    animation: hOrbFloat 20s ease-in-out infinite alternate;
+  }
+  .h-orb-2 {
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(178,141,71,.1) 0%, transparent 65%);
+    bottom: 0; right: -200px;
+    animation: hOrbFloat 16s ease-in-out infinite alternate;
+    animation-delay: -6s;
+  }
+  .h-orb-3 {
+    width: 550px; height: 550px;
+    background: radial-gradient(circle, rgba(5,15,40,.9) 0%, transparent 70%);
+    top: 38%; left: 28%;
+    animation: hOrbFloat 22s ease-in-out infinite alternate;
+    animation-delay: -10s;
+  }
+
+  /* ── Text colours in dark canvas ── */
+  .home-dark-canvas h2,
+  .home-dark-canvas h5,
+  .home-dark-canvas .fw-900 { color: #fff !important; }
+  .home-dark-canvas .section-eyebrow { color: #b28d47; }
+  .home-dark-canvas .text-muted      { color: rgba(255,255,255,.38) !important; }
+  .home-dark-canvas .btn-outline-primary {
+    border-color: rgba(178,141,71,.4) !important;
+    color: #b28d47 !important;
+    background: transparent !important;
+  }
+  .home-dark-canvas .btn-outline-primary:hover {
+    background: rgba(178,141,71,.1) !important;
+    color: #d4aa65 !important;
+  }
+
+  /* ── Category section ── */
+  .home-dark-canvas .cat-level-section { background: transparent !important; }
+  .home-dark-canvas .cat-level-card {
+    background: rgba(255,255,255,.04) !important;
+    border-color: rgba(255,255,255,.07) !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3) !important;
+    backdrop-filter: blur(8px);
+  }
+  .home-dark-canvas .cat-level-card[href*="kindergarten"] { order: 1; }
+  .home-dark-canvas .cat-level-card[href*="elementary"] { order: 2; }
+  .home-dark-canvas .cat-level-card[href*="junior-high-school"] { order: 3; }
+  .home-dark-canvas .cat-level-card[href*="senior-high-school"] { order: 4; }
+  .home-dark-canvas .cat-level-card[href*="college"] { order: 5; }
+  .home-dark-canvas .cat-level-card:hover {
+    background: rgba(255,255,255,.07) !important;
+    border-color: rgba(178,141,71,.4) !important;
+    box-shadow: 0 20px 56px rgba(0,0,0,.5), 0 0 0 1px rgba(178,141,71,.22) !important;
+  }
+  .home-dark-canvas .cat-level-name  { color: #fff !important; }
+  .home-dark-canvas .cat-level-count { color: rgba(255,255,255,.4) !important; }
+
+  /* ── Product cards ── */
+  .home-dark-canvas .product-card {
+    background: rgba(255,255,255,.04) !important;
+    border-color: rgba(255,255,255,.07) !important;
+    backdrop-filter: blur(8px);
+  }
+  .home-dark-canvas .product-card:hover {
+    background: rgba(255,255,255,.07) !important;
+    border-color: rgba(178,141,71,.35) !important;
+    box-shadow: 0 16px 48px rgba(0,0,0,.55) !important;
+  }
+  .home-dark-canvas .product-title { color: #fff !important; }
+  .home-dark-canvas .product-price { color: #b28d47 !important; }
+  .home-dark-canvas .card-body     { background: transparent !important; }
+  .home-dark-canvas .product-img-wrap { background: rgba(255,255,255,.06) !important; }
+  .home-dark-canvas .product-cat-badge {
+    background: rgba(0,0,0,.65) !important;
+    color: rgba(255,255,255,.75) !important;
+    border-color: rgba(255,255,255,.1) !important;
+  }
+  .home-dark-canvas .product-img-placeholder { color: rgba(178,141,71,.22) !important; }
+
+  /* ── Feature cards ── */
+  .home-dark-canvas .feature-card {
+    background: rgba(255,255,255,.04) !important;
+    border-color: rgba(255,255,255,.07) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 24px rgba(0,0,0,.25) !important;
+  }
+  .home-dark-canvas .feature-card:hover {
+    background: rgba(255,255,255,.07) !important;
+    border-color: rgba(178,141,71,.3) !important;
+    box-shadow: 0 16px 48px rgba(0,0,0,.45) !important;
+  }
+
+  /* ── Footer flush ── */
+  .footer { margin-top: 0 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<section class="hero" style="background-image:url('{% static 'images/home.png' %}');">
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+    <div class="container">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+
+        <div class="lg:col-span-6 xl:col-span-5">
+          <div class="hero-eyebrow">Official School Store</div>
+          <h1 class="hero-title">
+            Look Sharp,<br>
+            <span class="hero-hl">Stay Proud</span>
+            Every Day.
+          </h1>
+          <p class="hero-desc">
+            Shop school-approved uniforms online. Pick up on campus — no hassle, no waiting in long lines.
+          </p>
+          <div class="hero-cta">
+            <a href="{% url 'product_list' %}" class="btn btn-gradient btn-lg px-5 font-bold inline-flex items-center justify-center gap-2">
+              <span data-icon="bag" class="ui-icon"></span>Shop Now
+            </a>
+          </div>
+          <div class="hero-stats flex flex-wrap gap-4">
+          </div>
+        </div>
+
+        
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DARK CANVAS — all sections below the hero ════════════════ -->
+<div class="home-dark-canvas">
+
+  <!-- Ambient orbs -->
+  <div class="h-orb h-orb-1"></div>
+  <div class="h-orb h-orb-2"></div>
+  <div class="h-orb h-orb-3"></div>
+
+  <!-- ══ SCHOOL LEVEL CATEGORIES ══════════════════════════════════ -->
+  <section class="cat-level-section">
+    <div class="container">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Shop by Level</span>
+          <h2 class="font-black mb-0 text-2xl md:text-3xl tracking-tight">Find Your Uniform</h2>
+        </div>
+        <a href="{% url 'product_list' %}" class="btn btn-outline-primary btn-sm fw-600">All Products</a>
+      </div>
+
+      <div class="cat-level-grid">
+
+        <a href="{% url 'product_list' %}?category=college" class="cat-level-card">
+          <div class="cat-level-icon cli-1"><span data-icon="mortarboard-fill" class="ui-icon"></span></div>
+          <div class="cat-level-name">College</div>
+          <div class="cat-level-count">University uniforms</div>
+        </a>
+
+        <a href="{% url 'product_list' %}?category=senior-high-school" class="cat-level-card">
+          <div class="cat-level-icon cli-2"><span data-icon="book-fill" class="ui-icon"></span></div>
+          <div class="cat-level-name">Senior High School</div>
+          <div class="cat-level-count">Grades 11–12</div>
+        </a>
+
+        <a href="{% url 'product_list' %}?category=junior-high-school" class="cat-level-card">
+          <div class="cat-level-icon cli-6"><span data-icon="journal-bookmark-fill" class="ui-icon"></span></div>
+          <div class="cat-level-name">Junior High School</div>
+          <div class="cat-level-count">Grades 7–10</div>
+        </a>
+
+        <a href="{% url 'product_list' %}?category=elementary" class="cat-level-card">
+          <div class="cat-level-icon cli-3"><span data-icon="pencil-fill" class="ui-icon"></span></div>
+          <div class="cat-level-name">Elementary</div>
+          <div class="cat-level-count">Grades 1–6</div>
+        </a>
+
+        <a href="{% url 'product_list' %}?category=kindergarten" class="cat-level-card">
+          <div class="cat-level-icon cli-2" style="background:var(--g2);"><span data-icon="balloon-fill" class="ui-icon"></span></div>
+          <div class="cat-level-name">Kindergarten</div>
+          <div class="cat-level-count">Kinder</div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURED PRODUCTS ════════════════════════════════════════ -->
+  {% if featured %}
+  <section class="py-5">
+    <div class="container">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="section-eyebrow">Handpicked</span>
+          <h2 class="font-black mb-0 text-2xl md:text-3xl tracking-tight">Featured Products</h2>
+        </div>
+        <a href="{% url 'product_list' %}" class="btn btn-outline-primary btn-sm fw-600">
+          View All <span data-icon="arrow-right" class="ui-icon ml-1"></span>
+        </a>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {% for product in featured %}
+        <div>
+          {% include 'store/partials/product_card.html' %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ══ WHY UNISHOP ══════════════════════════════════════════════ -->
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <span class="section-eyebrow">Why Us</span>
+        <h2 class="font-black text-2xl md:text-3xl tracking-tight">Why Choose FCUUE?</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-blue"><span data-icon="patch-check-fill" class="ui-icon"></span></div>
+            <h5 class="font-bold mb-1 text-base">School Approved</h5>
+            <p class="text-muted text-sm mb-0">All items meet the official school dress code.</p>
+          </div>
+        </div>
+        <div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-green"><span data-icon="bag-check-fill" class="ui-icon"></span></div>
+            <h5 class="font-bold mb-1 text-base">Easy Pickup</h5>
+            <p class="text-muted text-sm mb-0">Order online, collect at the school uniform shop.</p>
+          </div>
+        </div>
+        <div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-purple"><span data-icon="stars" class="ui-icon"></span></div>
+            <h5 class="font-bold mb-1 text-base">Premium Quality</h5>
+            <p class="text-muted text-sm mb-0">Durable fabrics built to last the full school year.</p>
+          </div>
+        </div>
+        <div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-pink"><span data-icon="piggy-bank-fill" class="ui-icon"></span></div>
+            <h5 class="font-bold mb-1 text-base">Student Prices</h5>
+            <p class="text-muted text-sm mb-0">Affordable options for every budget.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA BANNER ══════════════════════════════════════════════ -->
+  {% if not user.is_authenticated %}
+  <section class="py-5">
+    <div class="container">
+      <div class="rounded-2xl p-5 text-center text-white relative overflow-hidden"
+           style="background:rgba(255,255,255,.04);border:1px solid rgba(178,141,71,.22);backdrop-filter:blur(12px);">
+        <div class="absolute inset-0" style="background:radial-gradient(ellipse at 65% 45%,rgba(178,141,71,.1),transparent 60%);pointer-events:none;"></div>
+        <div class="absolute" style="bottom:-60px;left:-60px;width:220px;height:220px;border-radius:50%;background:rgba(178,141,71,.07);filter:blur(50px);pointer-events:none;"></div>
+        <div class="relative" style="z-index:1;">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
+               style="background:rgba(178,141,71,.1);border:1px solid rgba(178,141,71,.28);font-size:.75rem;font-weight:600;color:rgba(255,255,255,.8);">
+            <span data-icon="stars" class="ui-icon" style="color:#b28d47;"></span> Join thousands of students
+          </div>
+          <h2 class="font-black mb-2 text-3xl md:text-4xl tracking-tight">Ready to Shop?</h2>
+          <p class="mb-4 mx-auto" style="color:rgba(255,255,255,.45);max-width:400px;">Create your free account and start ordering uniforms today.</p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="{% url 'register' %}" class="btn btn-gradient btn-lg px-5 fw-700">
+              <span data-icon="person-plus" class="ui-icon mr-2"></span>Sign Up Free
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-hero-ghost btn-lg px-4 fw-600">
+              Sign In
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- bottom padding so content doesn't slam into footer -->
+  <div style="height:4rem;"></div>
+
+</div><!-- end .home-dark-canvas -->
+
+{% endblock %}

@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Filter sidebar ───────────────────────────────────────────── */
+  .filter-panel {
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 2px 16px rgba(19,40,78,.08);
+    position: sticky; top: 80px;
+    overflow: hidden;
+  }
+  .filter-panel-head {
+    padding: 1.1rem 1.25rem .9rem;
+    border-bottom: 1px solid rgba(19,40,78,.08);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .filter-panel-title {
+    font-size: .85rem; font-weight: 800;
+    color: #13284e; display: flex; align-items: center; gap: .5rem;
+  }
+  .filter-panel-body { padding: 1.1rem 1.25rem; }
+  .filter-section { margin-bottom: 1.35rem; }
+  .filter-section:last-child { margin-bottom: 0; }
+  .filter-section-label {
+    font-size: .65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: #9ca3af; margin-bottom: .65rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .filter-section-label::after {
+    content: ''; flex: 1; height: 1px; background: #f1f2f4;
+  }
+
+  /* School level pills */
+  .cat-pills { display: flex; flex-direction: column; gap: 3px; }
+  .cat-pill {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .42rem .7rem; border-radius: .6rem;
+    font-size: .8rem; font-weight: 600; color: #6b7280;
+    transition: all .15s; cursor: pointer;
+  }
+  .cat-pill:hover { background: #f5f7fc; color: #13284e; }
+  .cat-pill.active {
+    background: #13284e; color: #fff;
+  }
+  .cat-pill .cat-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0; opacity: .6;
+  }
+  .cat-pill.active .cat-dot { background: #b28d47; opacity: 1; }
+
+  /* Price inputs */
+  .price-input-wrap {
+    position: relative;
+  }
+  .price-input-wrap::before {
+    content: '₱';
+    position: absolute; left: .65rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: .78rem; color: #9ca3af; pointer-events: none;
+    font-weight: 600;
+  }
+  .price-input {
+    width: 100%; padding: .52rem .65rem .52rem 1.5rem;
+    border: 1.5px solid #e5e7eb; border-radius: .65rem;
+    font-size: .8rem; color: #13284e;
+    background: #fafafa; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .price-input:focus {
+    border-color: #13284e; background: #fff;
+    box-shadow: 0 0 0 3px rgba(19,40,78,.08);
+  }
+  .price-input::placeholder { color: #c4c9d4; }
+
+  /* Size select */
+  .size-select-wrap { position: relative; }
+  .size-select-wrap::after {
+    content: '⌄';
+    position: absolute; right: .7rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: .8rem; color: #9ca3af; pointer-events: none;
+  }
+  .size-select {
+    width: 100%; padding: .52rem 2rem .52rem .75rem;
+    border: 1.5px solid #e5e7eb; border-radius: .65rem;
+    font-size: .8rem; color: #13284e;
+    background: #fafafa; outline: none;
+    appearance: none; -webkit-appearance: none;
+    transition: border-color .2s;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }
+  .size-select:focus { border-color: #13284e; background: #fff; }
+
+  /* Apply button */
+  .btn-apply-filter {
+    display: block; width: 100%;
+    padding: .65rem 1rem; border: none;
+    border-radius: .75rem; font-weight: 700;
+    font-size: .82rem; color: #fff;
+    background: linear-gradient(135deg, #13284e, #234080);
+    cursor: pointer; transition: opacity .18s, transform .18s;
+    font-family: 'Inter', sans-serif; letter-spacing: .02em;
+    box-shadow: 0 4px 14px rgba(19,40,78,.28);
+  }
+  .btn-apply-filter:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* ── Toolbar ──────────────────────────────────────────────────── */
+  .shop-toolbar {
+    display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap;
+    gap: .75rem;
+    background: #fff; border-radius: 1rem;
+    padding: .85rem 1.1rem;
+    box-shadow: 0 2px 12px rgba(19,40,78,.07);
+    margin-bottom: 1.25rem;
+  }
+  .shop-count {
+    font-size: .82rem; color: #6b7280; font-weight: 500;
+  }
+  .shop-count strong { color: #13284e; font-weight: 800; }
+  .shop-search-wrap { position: relative; }
+  .shop-search-wrap::before {
+    content: '⌕';
+    position: absolute; left: .75rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: .82rem; color: #9ca3af; pointer-events: none;
+  }
+  .shop-search {
+    padding: .52rem 1rem .52rem 2.1rem;
+    border: 1.5px solid #e5e7eb; border-radius: .75rem;
+    font-size: .82rem; color: #13284e; background: #fafafa;
+    outline: none; width: 220px;
+    transition: border-color .2s, box-shadow .2s, width .25s;
+    font-family: 'Inter', sans-serif;
+  }
+  .shop-search:focus {
+    border-color: #13284e; background: #fff; width: 260px;
+    box-shadow: 0 0 0 3px rgba(19,40,78,.08);
+  }
+  .shop-search::placeholder { color: #c4c9d4; }
+
+  /* Active filters bar */
+  .active-filters {
+    display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
+    margin-bottom: 1rem;
+  }
+  .active-filter-chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .25rem .6rem; border-radius: 99px;
+    background: #e8edf5; color: #13284e;
+    font-size: .72rem; font-weight: 700;
+  }
+  .active-filter-chip a { color: #6b7280; font-size: .7rem; font-weight: 900; }
+  .active-filter-chip a:hover { color: #dc2626; }
+
+  /* ── Clear all link ───────────────────────────────────────────── */
+  .btn-clear-all {
+    font-size: .72rem; color: #dc2626; padding: .2rem .55rem;
+    background: #fef2f2; border-radius: .4rem;
+    font-weight: 700; transition: background .15s;
+  }
+  .btn-clear-all:hover { background: #fee2e2; }
+
+  /* Mobile filter toggle — hidden by default, shown via media query */
+  .filter-mobile-toggle { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1>
+      {% if active_category %}{{ active_category.name }}
+      {% elif query %}Results for "{{ query }}"
+      {% else %}All Products{% endif %}
+    </h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Shop</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- ══ FILTER SIDEBAR ════════════════════════════════════════ -->
+    <div class="lg:col-span-3">
+      <div class="filter-panel">
+
+        <div class="filter-panel-head">
+          <span class="filter-panel-title">
+            <span data-icon="sliders2" class="ui-icon"></span>Filters
+          </span>
+          <div class="flex items-center gap-2">
+            {% if active_category or active_type or query or size_filter %}
+            <a href="{% url 'product_list' %}" class="btn-clear-all">Clear all</a>
+            {% endif %}
+            <button type="button" id="filterToggleBtn" class="filter-mobile-toggle"
+                    onclick="toggleFilterPanel()"
+                    style="border:none;background:rgba(19,40,78,.06);border-radius:.5rem;padding:.3rem .6rem;cursor:pointer;color:#13284e;align-items:center;gap:.3rem;font-size:.75rem;font-weight:700;">
+              <span id="filterToggleLabel">Show</span>
+              <span data-icon="chevron-down" class="ui-icon" id="filterToggleChevron" style="transition:transform .25s;"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-panel-body" id="filterPanelBody">
+          <form method="GET" id="filterForm">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+            {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+
+            <!-- Academic Level -->
+            <div class="filter-section">
+              <div class="filter-section-label">School Level</div>
+              <div class="cat-pills">
+                <a href="{% url 'product_list' %}{% if query %}?q={{ query }}{% endif %}"
+                   class="cat-pill {% if not active_category %}active{% endif %}">
+                  <span data-icon="grid-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>All Products
+                </a>
+                <a href="{% url 'product_list' %}?category=kindergarten{% if query %}&q={{ query }}{% endif %}"
+                   class="cat-pill {% if active_category.slug == 'kindergarten' %}active{% endif %}">
+                  <span data-icon="balloon-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>Kindergarten
+                </a>
+                <a href="{% url 'product_list' %}?category=elementary{% if query %}&q={{ query }}{% endif %}"
+                   class="cat-pill {% if active_category.slug == 'elementary' %}active{% endif %}">
+                  <span data-icon="pencil-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>Elementary
+                </a>
+                <a href="{% url 'product_list' %}?category=junior-high-school{% if query %}&q={{ query }}{% endif %}"
+                   class="cat-pill {% if active_category.slug == 'junior-high-school' %}active{% endif %}">
+                  <span data-icon="journal-bookmark-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>Junior High School
+                </a>
+                <a href="{% url 'product_list' %}?category=senior-high-school{% if query %}&q={{ query }}{% endif %}"
+                   class="cat-pill {% if active_category.slug == 'senior-high-school' %}active{% endif %}">
+                  <span data-icon="book-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>Senior High School
+                </a>
+                <a href="{% url 'product_list' %}?category=college{% if query %}&q={{ query }}{% endif %}"
+                   class="cat-pill {% if active_category.slug == 'college' %}active{% endif %}">
+                  <span data-icon="mortarboard-fill" class="ui-icon" style="font-size:.7rem;opacity:.6;"></span>College
+                </a>
+              </div>
+            </div>
+
+            <!-- Size -->
+            <div class="filter-section">
+              <div class="filter-section-label">Uniform Type</div>
+              <div class="size-select-wrap">
+                <select class="size-select" name="type" onchange="document.getElementById('filterForm').submit()">
+                  <option value="">All Types</option>
+                  {% for type in uniform_types %}
+                  <option value="{{ type.slug }}" {% if type_filter == type.slug %}selected{% endif %}>{{ type.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Size -->
+            <div class="filter-section">
+              <div class="filter-section-label">Size</div>
+              <div class="size-select-wrap">
+                <select class="size-select" name="size" onchange="document.getElementById('filterForm').submit()">
+                  <option value="">All Sizes</option>
+                  {% for size in size_choices %}
+                  <option value="{{ size.code }}" {% if size_filter == size.code %}selected{% endif %}>{{ size.label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCT AREA ══════════════════════════════════════════ -->
+    <div class="lg:col-span-9">
+
+      <!-- Toolbar -->
+      <div class="shop-toolbar">
+        <p class="shop-count mb-0">
+          <strong id="productCount">{{ products.paginator.count }}</strong>
+          product{{ products.paginator.count|pluralize }} found
+          {% if active_category %} in <strong>{{ active_category.name }}</strong>{% endif %}
+          {% if active_type %} under <strong>{{ active_type.name }}</strong>{% endif %}
+          {% if query %} for <strong>"{{ query }}"</strong>{% endif %}
+        </p>
+        <div class="shop-search-wrap hidden md:block">
+          <input id="liveSearchInput" type="search" placeholder="Quick search…"
+                 class="shop-search"
+                 {% if query %}value="{{ query }}"{% endif %}>
+        </div>
+      </div>
+
+      <!-- Active filter chips -->
+      {% if active_category or active_type or size_filter %}
+      <div class="active-filters">
+        <span style="font-size:.72rem;color:#9ca3af;font-weight:600;">Active:</span>
+        {% if active_category %}
+        <span class="active-filter-chip">
+          School Level: {{ active_category.name }}
+          <a href="{% url 'product_list' %}{% if query %}?q={{ query }}{% endif %}">&times;</a>
+        </span>
+        {% endif %}
+        {% if active_type %}
+        <span class="active-filter-chip">
+          Type: {{ active_type.name }}
+          <a href="?{% if active_category %}category={{ active_category.slug }}&{% endif %}{% if query %}q={{ query }}{% endif %}">&times;</a>
+        </span>
+        {% endif %}
+        {% if size_filter %}
+        <span class="active-filter-chip">
+          Size: {{ size_filter }}
+          <a href="?{% if active_category %}category={{ active_category.slug }}&{% endif %}{% if query %}q={{ query }}{% endif %}">&times;</a>
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4" id="productGrid">
+          {% for product in products %}
+          <div data-product-name="{{ product.name }}" data-product-cat="{% for cat in product.category.all %}{{ cat.name }} {% endfor %}">
+            {% include 'store/partials/product_card.html' %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav class="mt-6 flex justify-center">
+          <ul class="flex items-center gap-1">
+            {% if products.has_previous %}
+              <li>
+                <a class="px-3 py-2 rounded-lg border border-navy-200 text-sm font-semibold text-navy-700 hover:bg-navy-50 transition-colors"
+                   href="?{% if active_category %}category={{ active_category.slug }}&{% endif %}{% if query %}q={{ query }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ products.previous_page_number }}">
+                  <span data-icon="chevron-left" class="ui-icon"></span>
+                </a>
+              </li>
+            {% endif %}
+            {% for num in products.paginator.page_range %}
+              {% if products.number == num %}
+                <li><span class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#13284e;">{{ num }}</span></li>
+              {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                <li>
+                  <a class="px-3 py-2 rounded-lg border border-navy-200 text-sm font-semibold text-muted-600 hover:bg-navy-50 transition-colors"
+                     href="?{% if active_category %}category={{ active_category.slug }}&{% endif %}{% if query %}q={{ query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+            {% if products.has_next %}
+              <li>
+                <a class="px-3 py-2 rounded-lg border border-navy-200 text-sm font-semibold text-navy-700 hover:bg-navy-50 transition-colors"
+                   href="?{% if active_category %}category={{ active_category.slug }}&{% endif %}{% if query %}q={{ query }}&{% endif %}{% if size_filter %}size={{ size_filter }}&{% endif %}page={{ products.next_page_number }}">
+                  <span data-icon="chevron-right" class="ui-icon"></span>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon"><span data-icon="search" class="ui-icon"></span></div>
+          <h4>No products found</h4>
+          <p>Try adjusting your filters or search term.</p>
+          <a href="{% url 'product_list' %}" class="btn btn-gradient px-4 py-2 fw-700">Clear Filters</a>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFilterPanel() {
+  var body = document.getElementById('filterPanelBody');
+  var label = document.getElementById('filterToggleLabel');
+  var chevron = document.getElementById('filterToggleChevron');
+  var open = body.classList.toggle('is-open');
+  label.textContent = open ? 'Hide' : 'Show';
+  chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
+</script>
+{% endblock %}

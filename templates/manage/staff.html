@@ -1,0 +1,90 @@
+{% extends 'manage/base_manage.html' %}
+{% block title %}Staff Accounts{% endblock %}
+{% block page_name %}Staff Accounts{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+  <div>
+    <h2 class="admin-page-title">Staff Accounts</h2>
+    <p class="admin-page-subtitle">Create manager and store clerk logins</p>
+  </div>
+  <a href="{% url 'manage_staff_add' %}" class="btn-admin-primary">
+    <span data-icon="person-plus" class="ui-icon"></span>Add Staff
+  </a>
+</div>
+
+<div class="admin-table-wrap">
+  <div class="admin-table-head">
+    <div class="admin-table-title"><span data-icon="people" class="ui-icon"></span>Store Team</div>
+    <span style="font-size:.75rem;color:#9ca3af;font-weight:600;">{{ staff_users.count }} account{{ staff_users.count|pluralize }}</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th class="col-hide-mobile">Username</th>
+          <th class="col-hide-mobile">Email</th>
+          <th class="col-hide-mobile">Role</th>
+          <th class="col-hide-mobile">Status</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for staff_user in staff_users %}
+        <tr>
+          <td>
+            <div style="font-weight:800;color:#13284e;">{{ staff_user.get_full_name|default:staff_user.username }}</div>
+            <div class="row-mobile-meta">
+              {% if staff_user.is_superuser or staff_user.profile.role == 'manager' %}
+                <span class="status-badge badge-confirmed" style="font-size:.65rem;">Manager</span>
+              {% else %}
+                <span class="status-badge badge-processing" style="font-size:.65rem;">Clerk</span>
+              {% endif %}
+              {% if staff_user.is_active %}
+                <span class="status-badge badge-available" style="font-size:.65rem;">Active</span>
+              {% else %}
+                <span class="status-badge badge-cancelled" style="font-size:.65rem;">Inactive</span>
+              {% endif %}
+              <span style="color:#9ca3af;">{{ staff_user.username }}</span>
+            </div>
+          </td>
+          <td class="col-hide-mobile" style="color:#6b7280;">{{ staff_user.username }}</td>
+          <td class="col-hide-mobile" style="color:#6b7280;">{{ staff_user.email }}</td>
+          <td class="col-hide-mobile">
+            {% if staff_user.is_superuser or staff_user.profile.role == 'manager' %}
+              <span class="status-badge badge-confirmed">Store Manager</span>
+            {% else %}
+              <span class="status-badge badge-processing">Store Clerk</span>
+            {% endif %}
+          </td>
+          <td class="col-hide-mobile">
+            {% if staff_user.is_active %}
+              <span class="status-badge badge-available">Active</span>
+            {% else %}
+              <span class="status-badge badge-cancelled">Inactive</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;">
+              <a href="{% url 'manage_staff_edit' staff_user.pk %}" class="btn-admin-ghost" title="Edit">
+                <span data-icon="pencil" class="ui-icon"></span>
+              </a>
+              <form method="POST" action="{% url 'manage_staff_toggle' staff_user.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-admin-ghost" title="Toggle active status">
+                  <span data-icon="person-{% if staff_user.is_active %}dash{% else %}check{% endif %}" class="ui-icon"></span>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2.5rem;">No staff accounts yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

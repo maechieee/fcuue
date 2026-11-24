@@ -1,0 +1,115 @@
+{% extends 'manage/base_manage.html' %}
+{% block title %}Student Accounts{% endblock %}
+{% block page_name %}Student Accounts{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+  <div>
+    <h2 class="admin-page-title">Student Accounts</h2>
+    <p class="admin-page-subtitle">Monitor self-registered students and manage account status</p>
+  </div>
+</div>
+
+<div class="admin-panel mb-4">
+  <form method="GET" class="flex flex-wrap gap-2">
+    <div style="position:relative;flex:1;min-width:220px;">
+      <span data-icon="search" class="ui-icon" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.82rem;pointer-events:none;"></span>
+      <input type="text" name="q" placeholder="Search student ID, name, email, school level..."
+             value="{{ query }}"
+             style="width:100%;padding:.6rem 1rem .6rem 2.2rem;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.83rem;color:#13284e;background:#fafafa;outline:none;font-family:'Inter',sans-serif;">
+    </div>
+    <select name="status" style="padding:.52rem 2rem .52rem .75rem;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.82rem;color:#13284e;background:#fafafa;outline:none;appearance:none;font-family:'Inter',sans-serif;cursor:pointer;">
+      <option value="">All Statuses</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+    <button type="submit" class="btn-admin-primary">Filter</button>
+    {% if query or status_filter %}
+    <a href="{% url 'manage_students' %}" class="btn-admin-ghost">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="admin-table-wrap">
+  <div class="admin-table-head">
+    <div class="admin-table-title"><span data-icon="person-lines-fill" class="ui-icon"></span>Students</div>
+    <span style="font-size:.75rem;color:#9ca3af;font-weight:600;">{{ students.paginator.count }} account{{ students.paginator.count|pluralize }}</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th class="col-hide-mobile">Student ID</th>
+          <th class="col-hide-mobile">School Level / Year</th>
+          <th class="col-hide-mobile">Email</th>
+          <th class="col-hide-mobile">Orders</th>
+          <th class="col-hide-mobile">Status</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>
+            <div style="font-weight:800;color:#13284e;">{{ student.get_full_name|default:student.username }}</div>
+            <div class="row-mobile-meta">
+              {% if student.is_active %}
+                <span class="status-badge badge-available" style="font-size:.65rem;">Active</span>
+              {% else %}
+                <span class="status-badge badge-cancelled" style="font-size:.65rem;">Inactive</span>
+              {% endif %}
+              <span>{{ student.order_count }} order{{ student.order_count|pluralize }}</span>
+              <span>{{ student.profile.school_level.name|default:'No level' }}</span>
+            </div>
+          </td>
+          <td class="col-hide-mobile" style="color:#6b7280;">{{ student.profile.student_id|default:student.username }}</td>
+          <td class="col-hide-mobile" style="color:#6b7280;">{{ student.profile.school_level.name|default:'Not set' }}</td>
+          <td class="col-hide-mobile" style="color:#6b7280;">{{ student.email }}</td>
+          <td class="col-hide-mobile" style="font-weight:700;color:#13284e;">{{ student.order_count }}</td>
+          <td class="col-hide-mobile">
+            {% if student.is_active %}
+              <span class="status-badge badge-available">Active</span>
+            {% else %}
+              <span class="status-badge badge-cancelled">Inactive</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;">
+              <a href="{% url 'manage_student_edit' student.pk %}" class="btn-admin-ghost" title="Edit / reset password">
+                <span data-icon="pencil" class="ui-icon"></span>
+              </a>
+              <form method="POST" action="{% url 'manage_student_toggle' student.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-admin-ghost" title="Set account status">
+                  <span data-icon="person-{% if student.is_active %}dash{% else %}check{% endif %}" class="ui-icon"></span>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:2.5rem;">No student accounts found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if students.has_other_pages %}
+  <div style="padding:.9rem 1.25rem;border-top:1px solid rgba(19,40,78,.06);">
+    <nav>
+      <ul class="flex items-center justify-center gap-1 mb-0">
+        {% if students.has_previous %}
+          <li><a class="btn-admin-ghost" href="?page={{ students.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"><span data-icon="chevron-left" class="ui-icon"></span></a></li>
+        {% endif %}
+        <li><span style="padding:.45rem .85rem;border-radius:8px;background:#13284e;color:#fff;font-size:.78rem;font-weight:700;">{{ students.number }} / {{ students.paginator.num_pages }}</span></li>
+        {% if students.has_next %}
+          <li><a class="btn-admin-ghost" href="?page={{ students.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"><span data-icon="chevron-right" class="ui-icon"></span></a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
